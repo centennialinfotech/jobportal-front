@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: theme('colors.secondary');
+  color: theme('colors.text');
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* ... other styles ... */
+.container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+main {
+  padding-top: 48px;
+}
+
+.form-container {
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 448px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid rgba(30, 58, 138, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  color: theme('colors.text');
+  font-size: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field::placeholder {
+  color: #9CA3AF;
+}
+
+.input-field:focus {
+  border-color: theme('colors.accent');
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  outline: none;
+}
+
+.textarea-field {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  color: theme('colors.text');
+  font-size: 16px;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textarea-field::placeholder {
+  color: #9CA3AF;
+}
+
+.textarea-field:focus {
+  border-color: theme('colors.accent');
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  outline: none;
+}
+
+.file-field {
+  width: 100%;
+  margin-bottom: 16px;
+  color: theme('colors.text');
+}
+
+.btn-primary {
+  width: 100%;
+  background-color: #2563EB;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #083fb6;
+}
+
+.btn-primary:focus {
+  background-color: white;
+  color: theme('colors.accent');
+  border-color: theme('colors.accent');
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  outline: none;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: theme('colors.error');
+  font-size: 14px;
+  margin-top: 4px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.success-message {
+  color: theme('colors.success');
+  font-size: 14px;
+  margin-top: 4px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.header {
+  background-color: theme('colors.primary');
+  color: white;
+  padding: 16px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

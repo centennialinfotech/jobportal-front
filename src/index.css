@@ -75,8 +75,8 @@ main {
 
 .textarea-field {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 16px;
+  padding: 1px;
+  margin-bottom: 1px;
   border: 1px solid #E5E7EB;
   border-radius: 8px;
   color: theme('colors.text');
@@ -133,7 +133,7 @@ main {
 .error-message {
   color: theme('colors.error');
   font-size: 14px;
-  margin-top: 4px;
+  margin: -10px 10px 15px;
   animation: fadeIn 0.3s ease-out;
 }
 

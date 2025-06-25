@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // ✅ import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 function VerifyOTP({ email: initialEmail }) {
-  const navigate = useNavigate(); // ✅ create navigation object
+  const navigate = useNavigate(); 
   const [otpData, setOtpData] = useState({ email: initialEmail || '', otp: '' });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);

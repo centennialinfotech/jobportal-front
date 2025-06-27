@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import api from '../utils/api'; 
 import FormField from './FormField';
 
 function Login({ setToken, setUserId }) {
@@ -28,7 +29,7 @@ function Login({ setToken, setUserId }) {
 
     setIsLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/login', { email, password });
+      const res = await api.post('/login', { email, password }); // 👈 API call
       setToken(res.data.token);
       setUserId(res.data.userId);
       localStorage.setItem('token', res.data.token);

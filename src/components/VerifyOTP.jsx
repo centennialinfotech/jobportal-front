@@ -1,8 +1,9 @@
-
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // ✅ import useNavigate
 
 function VerifyOTP({ email: initialEmail }) {
+  const navigate = useNavigate(); // ✅ create navigation object
   const [otpData, setOtpData] = useState({ email: initialEmail || '', otp: '' });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,9 +14,13 @@ function VerifyOTP({ email: initialEmail }) {
     try {
       const response = await axios.post('http://localhost:5000/api/verify-otp', otpData);
       setMessage(response.data.message);
-      setOtpData({ email: '', otp: '' });
-      setView('login'); 
+
+      // ✅ Redirect to login after successful verification
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000); // Delay for user to read the success message
     } catch (err) {
+      console.error('OTP verification error:', err);
       setMessage(err.response?.data?.message || 'Error verifying OTP');
     } finally {
       setLoading(false);
@@ -48,7 +53,7 @@ function VerifyOTP({ email: initialEmail }) {
             onChange={(e) => setOtpData({ ...otpData, email: e.target.value })}
             className="mt-1 p-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
-            disabled={!!initialEmail} // Disable if email is passed from signup
+            disabled={!!initialEmail}
           />
         </div>
         <div>
@@ -76,7 +81,7 @@ function VerifyOTP({ email: initialEmail }) {
       >
         {loading ? 'Resending...' : 'Resend OTP'}
       </button>
-      {message && <p className="mt-4 text-center text-red-500">{message}</p>}
+      {message && <p className="mt-4 text-center text-green-600">{message}</p>}
     </div>
   );
 }

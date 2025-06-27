@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import FormField from './FormField';
 
 function Signup({ setSignupEmail }) {
@@ -34,7 +34,7 @@ function Signup({ setSignupEmail }) {
 
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/signup', { name, email, password });
+await api.post('/signup', { name, email, password });
       setSuccess('Account created! Redirecting to verify your email...');
       setErrors({});
       setApiError('');

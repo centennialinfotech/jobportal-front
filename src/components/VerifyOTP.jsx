@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
+import { useNavigate } from 'react-router-dom'; // ✅ import useNavigate
 
 function VerifyOTP({ email: initialEmail }) {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // ✅ create navigation object
   const [otpData, setOtpData] = useState({ email: initialEmail || '', otp: '' });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -12,7 +12,7 @@ function VerifyOTP({ email: initialEmail }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/verify-otp', otpData);
+const response = await api.post('/verify-otp', otpData);
       setMessage(response.data.message);
 
       // ✅ Redirect to login after successful verification
@@ -30,9 +30,10 @@ function VerifyOTP({ email: initialEmail }) {
   const handleResendOtp = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/resend-otp', {
-        email: otpData.email,
-      });
+      const response = await api.post('/resend-otp', {
+  email: otpData.email,
+});
+
       setMessage(response.data.message);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error resending OTP');

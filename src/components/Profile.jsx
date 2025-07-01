@@ -45,6 +45,7 @@ function Profile() {
     setIsLoading(true);
     try {
 await api.post('/api/profile', formData, {
+
           headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+
 import api from '../utils/api';
 import { useNavigate } from 'react-router-dom'; // ✅ import useNavigate
 
@@ -12,7 +14,9 @@ function VerifyOTP({ email: initialEmail }) {
     e.preventDefault();
     setLoading(true);
     try {
-const response = await api.post('/verify-otp', otpData);
+
+const response = await api.post('/api/verify-otp', otpData);
+
       setMessage(response.data.message);
 
       // ✅ Redirect to login after successful verification
@@ -30,7 +34,9 @@ const response = await api.post('/verify-otp', otpData);
   const handleResendOtp = async () => {
     setLoading(true);
     try {
-      const response = await api.post('/resend-otp', {
+
+      const response = await api.post('/api/resend-otp', {
+
   email: otpData.email,
 });
 

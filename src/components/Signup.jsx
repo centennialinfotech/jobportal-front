@@ -34,7 +34,7 @@ function Signup({ setSignupEmail }) {
 
     setIsLoading(true);
     try {
-await api.post('/signup', { name, email, password });
+await api.post('/api/signup', { name, email, password });
       setSuccess('Account created! Redirecting to verify your email...');
       setErrors({});
       setApiError('');

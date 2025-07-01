@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate } from 'react-router-dom'; // ✅ import useNavigate
 
 function VerifyOTP({ email: initialEmail }) {
@@ -12,7 +12,7 @@ function VerifyOTP({ email: initialEmail }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/verify-otp', otpData);
+const response = await api.post('/api/verify-otp', otpData);
       setMessage(response.data.message);
 
       // ✅ Redirect to login after successful verification
@@ -30,9 +30,10 @@ function VerifyOTP({ email: initialEmail }) {
   const handleResendOtp = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/resend-otp', {
-        email: otpData.email,
-      });
+      const response = await api.post('/api/resend-otp', {
+  email: otpData.email,
+});
+
       setMessage(response.data.message);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error resending OTP');

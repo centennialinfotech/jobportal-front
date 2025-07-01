@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import api from '../utils/api'; 
 import { ClipLoader } from "react-spinners";
 import FormField from './FormField';
 
@@ -43,8 +44,8 @@ function Profile() {
 
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/profile', formData, {
-        headers: {
+await api.post('/api/profile', formData, {
+          headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',
         },

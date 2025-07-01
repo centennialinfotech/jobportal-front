@@ -1,11 +1,9 @@
-// src/components/Login.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import api from '../utils/api'; 
+import api from '../utils/api';
 import FormField from './FormField';
 
-function Login({ setToken, setUserId }) {
+function Login({ setToken }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -26,18 +24,20 @@ function Login({ setToken, setUserId }) {
       setErrors(validationErrors);
       return;
     }
-
     setIsLoading(true);
     try {
-      const res = await api.post('/login', { email, password }); // 👈 API call
-      setToken(res.data.token);
-      setUserId(res.data.userId);
+      console.log('Login request:', { email, password }); // Debug log
+      const res = await api.post('/api/login', { email: email.trim(), password: password.trim() });
+      setToken(res.data.token, res.data.userId, res.data.isAdmin);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('userId', res.data.userId);
+      localStorage.setItem('isAdmin', res.data.isAdmin);
       setErrors({});
       setApiError('');
     } catch (err) {
-      setApiError(err.response?.data.message || 'Login failed');
+      const errorMsg = err.response?.data.message || 'Login failed';
+      console.error('Login error:', err.response?.status, errorMsg); // Debug log
+      setApiError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +70,13 @@ function Login({ setToken, setUserId }) {
           Signup
         </Link>
       </p>
+      {apiError === 'Email not verified' && (
+        <p className="mt-2 text-center text-text">
+          <Link to="/verify-otp" className="text-accent font-semibold hover:underline">
+            Verify OTP
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 
-function Navbar({ isAuthenticated, onLogout }) {
+function Navbar({ isAuthenticated, isAdmin, onLogout }) {
   return (
     <header className="bg-gray-800 py-4">
-      <div className=" mx-auto px-4 flex items-center justify-between" style={{ marginLeft: '20px', marginRight: '20px' }}>
+      <div className="mx-auto px-4 flex items-center justify-between" style={{ marginLeft: '20px', marginRight: '20px' }}>
         {/* Left-aligned logo */}
         <Link to="/" className="text-xl font-bold text-white">
           Job Portal
@@ -16,6 +16,11 @@ function Navbar({ isAuthenticated, onLogout }) {
               <Link to="/profile" className="text-white hover:underline">
                 Profile
               </Link>
+              {isAdmin && (
+                <Link to="/admin" className="text-white hover:underline">
+                  Admin
+                </Link>
+              )}
               <button
                 onClick={onLogout}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-500 transition-all duration-200"

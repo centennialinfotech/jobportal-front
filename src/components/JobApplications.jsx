@@ -1,27 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
-import { useNavigate } from 'react-router-dom';
 
-function AdminPanel() {
-  const [users, setUsers] = useState([]);
+function JobApplications() {
+  const { id } = useParams(); // Get job post ID from URL
+  const [applications, setApplications] = useState([]);
+  const [jobPost, setJobPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchApplications = async () => {
       try {
-        const response = await api.get('/api/admin/users');
-        setUsers(response.data);
+        const response = await api.get(`/api/admin/job-posts/${id}/applications`);
+        setApplications(response.data);
+        // Fetch job post details for context
+        const jobResponse = await api.get(`/api/admin/job-posts/${id}`);
+        setJobPost(jobResponse.data);
         setLoading(false);
       } catch (err) {
-        setError(err.response?.data.message || 'Failed to fetch users.');
+        setError(err.response?.data.message || 'Failed to fetch applications.');
         setLoading(false);
       }
     };
-    fetchUsers();
-  }, []);
+    fetchApplications();
+  }, [id]);
 
   if (loading) {
     return (
@@ -45,17 +50,20 @@ function AdminPanel() {
     <div className="min-h-screen bg-gray-50 py-12 px-0 sm:px-4 lg:px-6">
       <div className="max-w-full mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-primary text-center">Admin Panel - User Management</h2>
+          <h2 className="text-3xl font-bold text-primary text-center">
+            Applications for {jobPost?.title || 'Job Post'}
+          </h2>
           <button
             onClick={() => navigate('/admin/job-posts')}
             className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
           >
-            Manage Job Posts
+            Back to Job Posts
           </button>
         </div>
-        {users.length === 0 ? (
+
+        {applications.length === 0 ? (
           <p className="text-center text-gray-500 text-lg font-medium bg-white py-6 px-4 rounded-lg shadow-sm">
-            No users with CVs found.
+            No applications for this job post.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -72,23 +80,21 @@ function AdminPanel() {
                 </tr>
               </thead>
               <tbody className="text-gray-600 text-sm">
-                {users.map((user, index) => (
+                {applications.map((app) => (
                   <tr
-                    key={user._id}
-                    className={`border-b border-gray-200 hover:bg-gray-50 ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                    }`}
+                    key={app._id}
+                    className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="py-3 px-4 text-left whitespace-nowrap">{user.name}</td>
-                    <td className="py-3 px-4 text-left">{user.email}</td>
-                    <td className="py-3 px-4 text-left">{user.phone || 'Not provided'}</td>
-                    <td className="py-3 px-4 text-left">{user.state}</td>
-                    <td className="py-3 px-4 text-left">{user.city}</td>
-                    <td className="py-3 px-4 text-left">{user.houseNoStreet || 'Not provided'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId.name}</td>
+                    <td className="py-3 px-4 text-left">{app.userId.email}</td>
+                    <td className="py-3 px-4 text-left">{app.userId.phone || 'Not provided'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId.state}</td>
+                    <td className="py-3 px-4 text-left">{app.userId.city}</td>
+                    <td className="py-3 px-4 text-left">{app.userId.houseNoStreet || 'Not provided'}</td>
                     <td className="py-3 px-4 text-left">
-                      {user.cvFileId ? (
+                      {app.userId.cvFileId ? (
                         <a
-                          href={`${import.meta.env.VITE_API_URL}/api/cv/${user.cvFileId}`}
+                          href={`${import.meta.env.VITE_API_URL}/api/cv/${app.userId.cvFileId}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
@@ -110,4 +116,4 @@ function AdminPanel() {
   );
 }
 
-export default AdminPanel;
+export default JobApplications;

@@ -5,27 +5,28 @@ import Login from './components/Login.jsx';
 import Signup from './components/Signup.jsx';
 import VerifyOtp from './components/VerifyOTP.jsx';
 import Profile from './components/Profile.jsx';
-import AdminPanel from './components/AdminPanel.jsx'; // Import AdminPanel
+import ProfilePreview from './components/ProfilePreview.jsx';
 import NotFound from './components/NotFound.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import axios from 'axios';
+import HiringPosts from './components/HiringPosts.jsx';
+import JobList from './components/JobList.jsx';
+import JobApplications from './components/JobApplications.jsx';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [userId, setUserId] = useState(localStorage.getItem('userId') || '');
-  const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true' || false); // Store isAdmin
+  const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
   const [signupEmail, setSignupEmail] = useState('');
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
-    localStorage.removeItem('isAdmin'); // Clear isAdmin
+    localStorage.removeItem('isAdmin');
     setToken('');
     setUserId('');
     setIsAdmin(false);
   };
 
-  // Update setToken to also handle isAdmin
   const handleSetToken = (newToken, newUserId, newIsAdmin) => {
     setToken(newToken);
     setUserId(newUserId);
@@ -46,7 +47,7 @@ function App() {
               token ? (
                 <Navigate to="/profile" />
               ) : (
-                <Login setToken={handleSetToken} setUserId={setUserId} />
+                <Login setToken={handleSetToken} />
               )
             }
           />
@@ -67,10 +68,34 @@ function App() {
             }
           />
           <Route
-            path="/admin"
+            path="/profile/preview"
+            element={
+              <ProtectedRoute isAuthenticated={!!token}>
+                <ProfilePreview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/job-posts"
             element={
               <ProtectedRoute isAuthenticated={!!token && isAdmin}>
-                <AdminPanel />
+                <HiringPosts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/job-posts/:id/applications"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && isAdmin}>
+                <JobApplications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs"
+            element={
+              <ProtectedRoute isAuthenticated={!!token}>
+                <JobList />
               </ProtectedRoute>
             }
           />

@@ -1,18 +1,38 @@
-import { useState } from 'react';
-import axios from 'axios';
-import api from '../utils/api'; 
-import { ClipLoader } from "react-spinners";
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
+import { ClipLoader } from 'react-spinners';
 import FormField from './FormField';
+import { usStates, citiesByState } from '../utils/usData';
 
 function Profile() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [state, setState] = useState('');
+  const [city, setCity] = useState('');
+  const [houseNoStreet, setHouseNoStreet] = useState('');
   const [cv, setCv] = useState(null);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get('/api/profile');
+        const { name, phone, state, city, houseNoStreet } = response.data;
+        setName(name || '');
+        setPhone(phone || '');
+        setState(state || '');
+        setCity(city || '');
+        setHouseNoStreet(houseNoStreet || '');
+      } catch (err) {
+        console.error('Profile fetch error:', err);
+        setApiError(err.response?.data.message || 'Failed to load profile data.');
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const validate = () => {
     const newErrors = {};
@@ -20,8 +40,11 @@ function Profile() {
     else if (name.length < 2) newErrors.name = 'Name must be at least 2 characters';
     if (!phone) newErrors.phone = 'Phone number is required';
     else if (!/^\d{10}$/.test(phone)) newErrors.phone = 'Phone number must be 10 digits';
-    if (!address) newErrors.address = 'Address is required';
-    else if (address.length < 5) newErrors.address = 'Address must be at least 5 characters';
+    if (!state) newErrors.state = 'State is required';
+    else if (!usStates.some(s => s.name === state)) newErrors.state = 'Invalid US state';
+    if (!city) newErrors.city = 'City is required';
+    else if (city.length < 2) newErrors.city = 'City must be at least 2 characters';
+    if (houseNoStreet && houseNoStreet.length < 5) newErrors.houseNoStreet = 'House number and street must be at least 5 characters if provided';
     if (!cv) newErrors.cv = 'CV is required';
     else if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(cv.type))
       newErrors.cv = 'CV must be a PDF, DOC, or DOCX file';
@@ -37,32 +60,43 @@ function Profile() {
     }
 
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('phone', phone);
-    formData.append('address', address);
+    formData.append('name', name.trim());
+    formData.append('phone', phone.trim());
+    formData.append('state', state);
+    formData.append('city', city);
+    formData.append('houseNoStreet', houseNoStreet.trim() || '');
     formData.append('cv', cv);
 
     setIsLoading(true);
     try {
-await api.post('/api/profile', formData, {
-          headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+      await api.post('/api/profile', formData, {
+        headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       setSuccess('Profile updated successfully!');
       setName('');
       setPhone('');
-      setAddress('');
+      setState('');
+      setCity('');
+      setHouseNoStreet('');
       setCv(null);
       setErrors({});
       setApiError('');
     } catch (err) {
-      setApiError(err.response?.data.message || 'Update failed');
+      console.error('Profile update error:', err.response?.status, err.response?.data);
+      if (err.response?.status === 400 && err.response.data.errors) {
+        setErrors(err.response.data.errors);
+        setApiError('Please correct the errors below.');
+      } else {
+        setApiError(err.response?.data.message || 'Update failed');
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  const availableCities = state && citiesByState[usStates.find(s => s.name === state)?.abbreviation] || [];
 
   return (
     <div className="form-container">
@@ -84,14 +118,52 @@ await api.post('/api/profile', formData, {
         error={errors.phone}
       />
       <div>
+        <label className="block text-sm font-medium text-gray-700">State</label>
+        <select
+          value={state}
+          onChange={(e) => {
+            setState(e.target.value);
+            setCity(''); // Reset city when state changes
+          }}
+          className="input-field"
+          required
+        >
+          <option value="" disabled>Select a state</option>
+          {usStates.map((state) => (
+            <option key={state.abbreviation} value={state.name}>
+              {state.name}
+            </option>
+          ))}
+        </select>
+        {errors.state && <p className="error-message">{errors.state}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">City</label>
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="input-field"
+          required
+          disabled={!state}
+        >
+          <option value="" disabled>Select a city</option>
+          {availableCities.map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
+          ))}
+        </select>
+        {errors.city && <p className="error-message">{errors.city}</p>}
+      </div>
+      <div>
         <textarea
-          placeholder="Address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
+          placeholder="House Number and Street (optional)"
+          value={houseNoStreet}
+          onChange={(e) => setHouseNoStreet(e.target.value)}
           className="textarea-field"
           rows="4"
         ></textarea>
-        {errors.address && <p className="error-message">{errors.address}</p>}
+        {errors.houseNoStreet && <p className="error-message">{errors.houseNoStreet}</p>}
       </div>
       <div className="relative">
         <input
@@ -116,9 +188,7 @@ await api.post('/api/profile', formData, {
         </label>
         {errors.cv && <p className="error-message">{errors.cv}</p>}
       </div>
-      
-      <br></br>
-      <button onClick={handleSubmit} className="btn-primary" disabled={isLoading}>
+      <button onClick={handleSubmit} className="btn-primary w-full mt-4" disabled={isLoading}>
         {isLoading ? <ClipLoader size={20} color="#fff" /> : 'Submit'}
       </button>
     </div>

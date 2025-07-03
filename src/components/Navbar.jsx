@@ -1,28 +1,35 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Navbar({ isAuthenticated, isAdmin, onLogout }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onLogout();
+    navigate('/login');
+  };
+
   return (
     <header className="bg-gray-800 py-4">
       <div className="mx-auto px-4 flex items-center justify-between" style={{ marginLeft: '20px', marginRight: '20px' }}>
-        {/* Left-aligned logo */}
         <Link to="/" className="text-xl font-bold text-white">
           Job Portal
         </Link>
-
-        {/* Right-aligned nav */}
         <nav className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              <Link to="/profile" className="text-white hover:underline">
-                Profile
+              <Link to="/jobs" className="text-white hover:underline">
+                Jobs
+              </Link>
+              <Link to="/profile/preview" className="text-white hover:underline">
+                Profile Preview
               </Link>
               {isAdmin && (
-                <Link to="/admin" className="text-white hover:underline">
-                  Admin
+                <Link to="/admin/job-posts" className="text-white hover:underline">
+                  Manage Posts
                 </Link>
               )}
               <button
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-500 transition-all duration-200"
               >
                 Logout

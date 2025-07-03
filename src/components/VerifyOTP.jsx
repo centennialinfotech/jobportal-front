@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import api from '../utils/api';
+import { ClipLoader } from 'react-spinners';
+
 import { useNavigate } from 'react-router-dom'; // ✅ import useNavigate
 
 function VerifyOTP({ email: initialEmail }) {

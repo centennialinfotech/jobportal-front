@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
-import FormField from './FormField';
 import { usStates, citiesByState } from '../utils/usData';
 
 function Profile() {
@@ -9,13 +8,17 @@ function Profile() {
   const [phone, setPhone] = useState('');
   const [state, setState] = useState('');
   const [city, setCity] = useState('');
+  const [useCustomCity, setUseCustomCity] = useState(false);
+  const [customCity, setCustomCity] = useState('');
   const [houseNoStreet, setHouseNoStreet] = useState('');
   const [cv, setCv] = useState(null);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [availableCities, setAvailableCities] = useState([]);
 
+  // Fetch profile data on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -24,7 +27,13 @@ function Profile() {
         setName(name || '');
         setPhone(phone || '');
         setState(state || '');
-        setCity(city || '');
+        if (state && citiesByState[usStates.find(s => s.name === state)?.abbreviation]?.includes(city)) {
+          setCity(city || '');
+          setUseCustomCity(false);
+        } else {
+          setCustomCity(city || '');
+          setUseCustomCity(true);
+        }
         setHouseNoStreet(houseNoStreet || '');
       } catch (err) {
         console.error('Profile fetch error:', err);
@@ -34,6 +43,22 @@ function Profile() {
     fetchProfile();
   }, []);
 
+  // Fetch cities when state changes
+  useEffect(() => {
+    if (state) {
+      const stateObj = usStates.find(s => s.name.toLowerCase() === state.toLowerCase());
+      if (stateObj) {
+        setAvailableCities(citiesByState[stateObj.abbreviation] || []);
+      } else {
+        setAvailableCities([]);
+      }
+      setCity('');
+      setCustomCity('');
+      setUseCustomCity(false);
+    }
+  }, [state]);
+
+  // Client-side validation
   const validate = () => {
     const newErrors = {};
     if (!name) newErrors.name = 'Name is required';
@@ -41,9 +66,10 @@ function Profile() {
     if (!phone) newErrors.phone = 'Phone number is required';
     else if (!/^\d{10}$/.test(phone)) newErrors.phone = 'Phone number must be 10 digits';
     if (!state) newErrors.state = 'State is required';
-    else if (!usStates.some(s => s.name === state)) newErrors.state = 'Invalid US state';
-    if (!city) newErrors.city = 'City is required';
-    else if (city.length < 2) newErrors.city = 'City must be at least 2 characters';
+    else if (!usStates.some(s => s.name.toLowerCase() === state.toLowerCase())) newErrors.state = 'Invalid US state';
+    const selectedCity = useCustomCity ? customCity : city;
+    if (!selectedCity) newErrors.city = 'City is required';
+    else if (selectedCity.length < 2) newErrors.city = 'City must be at least 2 characters';
     if (houseNoStreet && houseNoStreet.length < 5) newErrors.houseNoStreet = 'House number and street must be at least 5 characters if provided';
     if (!cv) newErrors.cv = 'CV is required';
     else if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(cv.type))
@@ -62,15 +88,15 @@ function Profile() {
     const formData = new FormData();
     formData.append('name', name.trim());
     formData.append('phone', phone.trim());
-    formData.append('state', state);
-    formData.append('city', city);
+    formData.append('state', state.trim());
+    formData.append('city', useCustomCity ? customCity.trim() : city.trim());
     formData.append('houseNoStreet', houseNoStreet.trim() || '');
     formData.append('cv', cv);
 
     setIsLoading(true);
     try {
-await api.post('/api/profile', formData, {
-          headers: {
+      await api.post('/api/profile', formData, {
+        headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',
         },
@@ -80,6 +106,8 @@ await api.post('/api/profile', formData, {
       setPhone('');
       setState('');
       setCity('');
+      setCustomCity('');
+      setUseCustomCity(false);
       setHouseNoStreet('');
       setCv(null);
       setErrors({});
@@ -97,34 +125,42 @@ await api.post('/api/profile', formData, {
     }
   };
 
-  const availableCities = state && citiesByState[usStates.find(s => s.name === state)?.abbreviation] || [];
-
   return (
     <div className="form-container">
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">Update Profile</h2>
       {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
       {success && <p className="success-message mb-4 text-center">{success}</p>}
-      <FormField
-        type="text"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        error={errors.name}
-      />
-      <FormField
-        type="tel"
-        placeholder="Phone Number"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        error={errors.phone}
-      />
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Name</label>
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="input-field"
+        />
+        {errors.name && <p className="error-message">{errors.name}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+        <input
+          type="tel"
+          placeholder="Phone Number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          className="input-field"
+        />
+        {errors.phone && <p className="error-message">{errors.phone}</p>}
+      </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">State</label>
         <select
           value={state}
           onChange={(e) => {
             setState(e.target.value);
-            setCity(''); // Reset city when state changes
+            setCity('');
+            setCustomCity('');
+            setUseCustomCity(false);
           }}
           className="input-field"
           required
@@ -140,23 +176,45 @@ await api.post('/api/profile', formData, {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">City</label>
-        <select
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="input-field"
-          required
-          disabled={!state}
-        >
-          <option value="" disabled>Select a city</option>
-          {availableCities.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            value={useCustomCity ? 'Other' : city}
+            onChange={(e) => {
+              if (e.target.value === 'Other') {
+                setUseCustomCity(true);
+                setCity('');
+              } else {
+                setUseCustomCity(false);
+                setCity(e.target.value);
+                setCustomCity('');
+              }
+            }}
+            className="input-field flex-1"
+            required
+            disabled={!state}
+          >
+            <option value="" disabled>Select a city</option>
+            {availableCities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+            <option value="Other">Other</option>
+          </select>
+          {useCustomCity && (
+            <input
+              type="text"
+              placeholder="Enter city"
+              value={customCity}
+              onChange={(e) => setCustomCity(e.target.value)}
+              className="input-field flex-1"
+            />
+          )}
+        </div>
         {errors.city && <p className="error-message">{errors.city}</p>}
       </div>
       <div>
+        <label className="block text-sm font-medium text-gray-700">House Number and Street (optional)</label>
         <textarea
           placeholder="House Number and Street (optional)"
           value={houseNoStreet}

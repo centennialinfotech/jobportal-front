@@ -4,29 +4,32 @@ import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 
 function JobApplications() {
-  const { id } = useParams(); // Get job post ID from URL
+  const { id } = useParams();
   const [applications, setApplications] = useState([]);
   const [jobPost, setJobPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const response = await api.get(`/api/admin/job-posts/${id}/applications`);
-        setApplications(response.data);
-        // Fetch job post details for context
-        const jobResponse = await api.get(`/api/admin/job-posts/${id}`);
-        setJobPost(jobResponse.data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.response?.data.message || 'Failed to fetch applications.');
-        setLoading(false);
+useEffect(() => {
+  const fetchApplications = async () => {
+    try {
+      const response = await api.get(`/api/admin/job-posts/${id}/applications`);
+      console.log('Applications:', response.data);
+      setApplications(response.data);
+      if (response.data.some(app => !app.userId)) {
+        setError('Some applications have invalid user data. Contact support.');
       }
-    };
-    fetchApplications();
-  }, [id]);
+      const jobResponse = await api.get(`/api/admin/job-posts/${id}`);
+      setJobPost(jobResponse.data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.response?.data.message || 'Failed to fetch applications or job post.');
+      setLoading(false);
+    }
+  };
+  fetchApplications();
+}, [id]);
 
   if (loading) {
     return (
@@ -85,14 +88,14 @@ function JobApplications() {
                     key={app._id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="py-3 px-4 text-left">{app.userId.name}</td>
-                    <td className="py-3 px-4 text-left">{app.userId.email}</td>
-                    <td className="py-3 px-4 text-left">{app.userId.phone || 'Not provided'}</td>
-                    <td className="py-3 px-4 text-left">{app.userId.state}</td>
-                    <td className="py-3 px-4 text-left">{app.userId.city}</td>
-                    <td className="py-3 px-4 text-left">{app.userId.houseNoStreet || 'Not provided'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId?.name || 'Unknown'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId?.email || 'Unknown'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId?.phone || 'Not provided'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId?.state || 'Unknown'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId?.city || 'Unknown'}</td>
+                    <td className="py-3 px-4 text-left">{app.userId?.houseNoStreet || 'Not provided'}</td>
                     <td className="py-3 px-4 text-left">
-                      {app.userId.cvFileId ? (
+                      {app.userId?.cvFileId ? (
                         <a
                           href={`${import.meta.env.VITE_API_URL}/api/cv/${app.userId.cvFileId}`}
                           target="_blank"

@@ -1,27 +1,76 @@
-import { useState } from 'react';
-import axios from 'axios';
-import api from '../utils/api'; 
-import { ClipLoader } from "react-spinners";
-import FormField from './FormField';
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
+import { ClipLoader } from 'react-spinners';
+import { usStates, citiesByState } from '../utils/usData';
 
 function Profile() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [state, setState] = useState('');
+  const [city, setCity] = useState('');
+  const [useCustomCity, setUseCustomCity] = useState(false);
+  const [customCity, setCustomCity] = useState('');
+  const [houseNoStreet, setHouseNoStreet] = useState('');
   const [cv, setCv] = useState(null);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [availableCities, setAvailableCities] = useState([]);
 
+  // Fetch profile data on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get('/api/profile');
+        const { name, phone, state, city, houseNoStreet } = response.data;
+        setName(name || '');
+        setPhone(phone || '');
+        setState(state || '');
+        if (state && citiesByState[usStates.find(s => s.name === state)?.abbreviation]?.includes(city)) {
+          setCity(city || '');
+          setUseCustomCity(false);
+        } else {
+          setCustomCity(city || '');
+          setUseCustomCity(true);
+        }
+        setHouseNoStreet(houseNoStreet || '');
+      } catch (err) {
+        console.error('Profile fetch error:', err);
+        setApiError(err.response?.data.message || 'Failed to load profile data.');
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    if (state) {
+      const stateObj = usStates.find(s => s.name.toLowerCase() === state.toLowerCase());
+      if (stateObj) {
+        setAvailableCities(citiesByState[stateObj.abbreviation] || []);
+      } else {
+        setAvailableCities([]);
+      }
+      setCity('');
+      setCustomCity('');
+      setUseCustomCity(false);
+    }
+  }, [state]);
+
+  // Client-side validation
   const validate = () => {
     const newErrors = {};
     if (!name) newErrors.name = 'Name is required';
     else if (name.length < 2) newErrors.name = 'Name must be at least 2 characters';
     if (!phone) newErrors.phone = 'Phone number is required';
     else if (!/^\d{10}$/.test(phone)) newErrors.phone = 'Phone number must be 10 digits';
-    if (!address) newErrors.address = 'Address is required';
-    else if (address.length < 5) newErrors.address = 'Address must be at least 5 characters';
+    if (!state) newErrors.state = 'State is required';
+    else if (!usStates.some(s => s.name.toLowerCase() === state.toLowerCase())) newErrors.state = 'Invalid US state';
+    const selectedCity = useCustomCity ? customCity : city;
+    if (!selectedCity) newErrors.city = 'City is required';
+    else if (selectedCity.length < 2) newErrors.city = 'City must be at least 2 characters';
+    if (houseNoStreet && houseNoStreet.length < 5) newErrors.houseNoStreet = 'House number and street must be at least 5 characters if provided';
     if (!cv) newErrors.cv = 'CV is required';
     else if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(cv.type))
       newErrors.cv = 'CV must be a PDF, DOC, or DOCX file';
@@ -37,16 +86,17 @@ function Profile() {
     }
 
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('phone', phone);
-    formData.append('address', address);
+    formData.append('name', name.trim());
+    formData.append('phone', phone.trim());
+    formData.append('state', state.trim());
+    formData.append('city', useCustomCity ? customCity.trim() : city.trim());
+    formData.append('houseNoStreet', houseNoStreet.trim() || '');
     formData.append('cv', cv);
 
     setIsLoading(true);
     try {
-await api.post('/api/profile', formData, {
-
-          headers: {
+      await api.post('/api/profile', formData, {
+        headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',
         },
@@ -54,12 +104,22 @@ await api.post('/api/profile', formData, {
       setSuccess('Profile updated successfully!');
       setName('');
       setPhone('');
-      setAddress('');
+      setState('');
+      setCity('');
+      setCustomCity('');
+      setUseCustomCity(false);
+      setHouseNoStreet('');
       setCv(null);
       setErrors({});
       setApiError('');
     } catch (err) {
-      setApiError(err.response?.data.message || 'Update failed');
+      console.error('Profile update error:', err.response?.status, err.response?.data);
+      if (err.response?.status === 400 && err.response.data.errors) {
+        setErrors(err.response.data.errors);
+        setApiError('Please correct the errors below.');
+      } else {
+        setApiError(err.response?.data.message || 'Update failed');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -70,29 +130,99 @@ await api.post('/api/profile', formData, {
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">Update Profile</h2>
       {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
       {success && <p className="success-message mb-4 text-center">{success}</p>}
-      <FormField
-        type="text"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        error={errors.name}
-      />
-      <FormField
-        type="tel"
-        placeholder="Phone Number"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        error={errors.phone}
-      />
       <div>
+        <label className="block text-sm font-medium text-gray-700">Name</label>
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="input-field"
+        />
+        {errors.name && <p className="error-message">{errors.name}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+        <input
+          type="tel"
+          placeholder="Phone Number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          className="input-field"
+        />
+        {errors.phone && <p className="error-message">{errors.phone}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">State</label>
+        <select
+          value={state}
+          onChange={(e) => {
+            setState(e.target.value);
+            setCity('');
+            setCustomCity('');
+            setUseCustomCity(false);
+          }}
+          className="input-field"
+          required
+        >
+          <option value="" disabled>Select a state</option>
+          {usStates.map((state) => (
+            <option key={state.abbreviation} value={state.name}>
+              {state.name}
+            </option>
+          ))}
+        </select>
+        {errors.state && <p className="error-message">{errors.state}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">City</label>
+        <div className="flex items-center gap-2">
+          <select
+            value={useCustomCity ? 'Other' : city}
+            onChange={(e) => {
+              if (e.target.value === 'Other') {
+                setUseCustomCity(true);
+                setCity('');
+              } else {
+                setUseCustomCity(false);
+                setCity(e.target.value);
+                setCustomCity('');
+              }
+            }}
+            className="input-field flex-1"
+            required
+            disabled={!state}
+          >
+            <option value="" disabled>Select a city</option>
+            {availableCities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+            <option value="Other">Other</option>
+          </select>
+          {useCustomCity && (
+            <input
+              type="text"
+              placeholder="Enter city"
+              value={customCity}
+              onChange={(e) => setCustomCity(e.target.value)}
+              className="input-field flex-1"
+            />
+          )}
+        </div>
+        {errors.city && <p className="error-message">{errors.city}</p>}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">House Number and Street (optional)</label>
         <textarea
-          placeholder="Address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
+          placeholder="House Number and Street (optional)"
+          value={houseNoStreet}
+          onChange={(e) => setHouseNoStreet(e.target.value)}
           className="textarea-field"
           rows="4"
         ></textarea>
-        {errors.address && <p className="error-message">{errors.address}</p>}
+        {errors.houseNoStreet && <p className="error-message">{errors.houseNoStreet}</p>}
       </div>
       <div className="relative">
         <input
@@ -117,9 +247,7 @@ await api.post('/api/profile', formData, {
         </label>
         {errors.cv && <p className="error-message">{errors.cv}</p>}
       </div>
-      
-      <br></br>
-      <button onClick={handleSubmit} className="btn-primary" disabled={isLoading}>
+      <button onClick={handleSubmit} className="btn-primary w-full mt-4" disabled={isLoading}>
         {isLoading ? <ClipLoader size={20} color="#fff" /> : 'Submit'}
       </button>
     </div>

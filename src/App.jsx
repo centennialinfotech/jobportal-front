@@ -11,6 +11,9 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import HiringPosts from './components/HiringPosts.jsx';
 import JobList from './components/JobList.jsx';
 import JobApplications from './components/JobApplications.jsx';
+import Subscription from './components/Subscription.jsx';
+import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
+import SubscriptionCancel from './components/SubscriptionCancel.jsx';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -96,6 +99,30 @@ function App() {
             element={
               <ProtectedRoute isAuthenticated={!!token}>
                 <JobList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin}>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription/success"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin}>
+                <SubscriptionSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription/cancel"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin}>
+                <SubscriptionCancel />
               </ProtectedRoute>
             }
           />

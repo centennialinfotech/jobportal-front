@@ -48,7 +48,7 @@ function App() {
             path="/login"
             element={
               token ? (
-                <Navigate to="/profile" />
+                <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} />
               ) : (
                 <Login setToken={handleSetToken} />
               )
@@ -56,11 +56,11 @@ function App() {
           />
           <Route
             path="/signup"
-            element={token ? <Navigate to="/profile" /> : <Signup setSignupEmail={setSignupEmail} />}
+            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} /> : <Signup setSignupEmail={setSignupEmail} />}
           />
           <Route
             path="/verify-otp"
-            element={token ? <Navigate to="/profile" /> : <VerifyOtp email={signupEmail} />}
+            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} /> : <VerifyOtp email={signupEmail} />}
           />
           <Route
             path="/profile"
@@ -95,6 +95,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/subscription/switch"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && isAdmin}>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/jobs"
             element={
               <ProtectedRoute isAuthenticated={!!token}>
@@ -105,7 +113,7 @@ function App() {
           <Route
             path="/subscription"
             element={
-              <ProtectedRoute isAuthenticated={!!token && !isAdmin}>
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
                 <Subscription />
               </ProtectedRoute>
             }
@@ -113,7 +121,7 @@ function App() {
           <Route
             path="/subscription/success"
             element={
-              <ProtectedRoute isAuthenticated={!!token && !isAdmin}>
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
                 <SubscriptionSuccess />
               </ProtectedRoute>
             }
@@ -121,12 +129,12 @@ function App() {
           <Route
             path="/subscription/cancel"
             element={
-              <ProtectedRoute isAuthenticated={!!token && !isAdmin}>
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
                 <SubscriptionCancel />
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to={token ? '/profile' : '/login'} />} />
+          <Route path="/" element={<Navigate to={token ? (isAdmin ? '/admin/job-posts' : '/profile') : '/login'} />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

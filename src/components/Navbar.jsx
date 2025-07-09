@@ -23,9 +23,16 @@ function Navbar({ isAuthenticated, isAdmin, onLogout }) {
               <Link to="/profile/preview" className="text-white hover:underline">
                 Profile Preview
               </Link>
-              {isAdmin && (
-                <Link to="/admin/job-posts" className="text-white hover:underline">
-                  Manage Posts
+              {isAdmin ? (
+                <>
+                  <Link to="/admin/job-posts" className="text-white hover:underline">
+                    Manage Posts
+                  </Link>
+                 
+                </>
+              ) : (
+                <Link to="/subscription" className="text-white hover:underline">
+                  Subscription
                 </Link>
               )}
               <button

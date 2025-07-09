@@ -11,6 +11,9 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import HiringPosts from './components/HiringPosts.jsx';
 import JobList from './components/JobList.jsx';
 import JobApplications from './components/JobApplications.jsx';
+import Subscription from './components/Subscription.jsx';
+import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
+import SubscriptionCancel from './components/SubscriptionCancel.jsx';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -45,7 +48,7 @@ function App() {
             path="/login"
             element={
               token ? (
-                <Navigate to="/profile" />
+                <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} />
               ) : (
                 <Login setToken={handleSetToken} />
               )
@@ -53,11 +56,11 @@ function App() {
           />
           <Route
             path="/signup"
-            element={token ? <Navigate to="/profile" /> : <Signup setSignupEmail={setSignupEmail} />}
+            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} /> : <Signup setSignupEmail={setSignupEmail} />}
           />
           <Route
             path="/verify-otp"
-            element={token ? <Navigate to="/profile" /> : <VerifyOtp email={signupEmail} />}
+            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} /> : <VerifyOtp email={signupEmail} />}
           />
           <Route
             path="/profile"
@@ -92,6 +95,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/subscription/switch"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && isAdmin}>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/jobs"
             element={
               <ProtectedRoute isAuthenticated={!!token}>
@@ -99,7 +110,31 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to={token ? '/profile' : '/login'} />} />
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription/success"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
+                <SubscriptionSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription/cancel"
+            element={
+              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
+                <SubscriptionCancel />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to={token ? (isAdmin ? '/admin/job-posts' : '/profile') : '/login'} />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

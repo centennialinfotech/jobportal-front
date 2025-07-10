@@ -28,7 +28,9 @@ function Navbar({ isAuthenticated, isAdmin, onLogout }) {
                   <Link to="/admin/job-posts" className="text-white hover:underline">
                     Manage Posts
                   </Link>
-                 
+                <Link to="/admin/subscription/switch" className="text-white hover:underline">
+      Switch Subscription
+    </Link>
                 </>
               ) : (
                 <Link to="/subscription" className="text-white hover:underline">

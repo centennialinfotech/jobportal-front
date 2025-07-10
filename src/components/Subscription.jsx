@@ -56,7 +56,10 @@ const Subscription = () => {
             data: err.response?.data,
             attempt: i + 1,
           });
-          if (err.response?.status === 404) return; // No subscription is valid
+          if (err.response?.status === 404) {
+            setCurrentPlan('free'); // Assume free plan if no subscription exists
+            return;
+          }
           if (i < retries - 1) await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -86,8 +89,8 @@ const Subscription = () => {
       );
 
       if (planId === 'free') {
-        setSuccess('Free plan activated successfully! You are now an admin.');
-        localStorage.setItem('isAdmin', 'true');
+        setSuccess('Free plan activated successfully!');
+        localStorage.setItem('isAdmin', 'false'); // Free plan sets isAdmin to false
         setCurrentPlan('free');
         setTimeout(() => {
           navigate('/profile');
@@ -98,6 +101,7 @@ const Subscription = () => {
         setQrCode(qrCode);
         setPaymentId(paymentId);
         window.open(approvalUrl, '_blank');
+        localStorage.setItem('isAdmin', 'true'); // Paid plans set isAdmin to true
       }
     } catch (err) {
       console.error('Checkout error:', {
@@ -154,7 +158,7 @@ const Subscription = () => {
                 className={`relative bg-white rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl ${
                   selectedPlan === plan.planId && qrCode && paymentId
                     ? 'min-h-[480px] bg-accent/10 border-2 border-accent'
-                    : currentPlan === plan.planId
+                    : currentPlan === plan.planId && currentPlan
                     ? 'min-h-[350px] border-4 border-success bg-success/20'
                     : 'min-h-[350px] border border-gray-200'
                 } ${plan.isPopular && !(selectedPlan === plan.planId && qrCode && paymentId) && currentPlan !== plan.planId ? 'border-2 border-accent' : ''}`}
@@ -164,7 +168,7 @@ const Subscription = () => {
                     Most Popular
                   </span>
                 )}
-                {currentPlan === plan.planId && (
+                {currentPlan === plan.planId && currentPlan && (
                   <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-success text-white text-sm font-bold px-4 py-1 rounded-full">
                     Current Plan
                   </span>
@@ -266,11 +270,7 @@ const Subscription = () => {
     );
   }
 
-  return renderSubscriptionContent(
-    isAdmin && location.pathname === '/admin/subscription/switch'
-      ? 'Switch Your Subscription Plan'
-      : 'Choose Your Subscription Plan'
-  );
+  return renderSubscriptionContent('Choose Your Subscription Plan');
 };
 
 export default Subscription;

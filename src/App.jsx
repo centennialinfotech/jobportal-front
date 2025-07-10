@@ -14,6 +14,7 @@ import JobApplications from './components/JobApplications.jsx';
 import Subscription from './components/Subscription.jsx';
 import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './components/SubscriptionCancel.jsx';
+import AdminUsers from './components/AdminUsers.jsx';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -95,10 +96,10 @@ function App() {
             }
           />
           <Route
-            path="/admin/subscription/switch"
+            path="/admin/users"
             element={
               <ProtectedRoute isAuthenticated={!!token && isAdmin}>
-                <Subscription />
+                <AdminUsers />
               </ProtectedRoute>
             }
           />
@@ -113,7 +114,7 @@ function App() {
           <Route
             path="/subscription"
             element={
-              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
+              <ProtectedRoute isAuthenticated={!!token}>
                 <Subscription />
               </ProtectedRoute>
             }
@@ -121,7 +122,7 @@ function App() {
           <Route
             path="/subscription/success"
             element={
-              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
+              <ProtectedRoute isAuthenticated={!!token}>
                 <SubscriptionSuccess />
               </ProtectedRoute>
             }
@@ -129,7 +130,7 @@ function App() {
           <Route
             path="/subscription/cancel"
             element={
-              <ProtectedRoute isAuthenticated={!!token && !isAdmin} redirectTo="/admin/job-posts">
+              <ProtectedRoute isAuthenticated={!!token}>
                 <SubscriptionCancel />
               </ProtectedRoute>
             }

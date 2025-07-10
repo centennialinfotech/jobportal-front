@@ -23,20 +23,17 @@ function Navbar({ isAuthenticated, isAdmin, onLogout }) {
               <Link to="/profile/preview" className="text-white hover:underline">
                 Profile Preview
               </Link>
-              {isAdmin ? (
+              {isAdmin && (
                 <>
                   <Link to="/admin/job-posts" className="text-white hover:underline">
                     Manage Posts
                   </Link>
-                <Link to="/admin/subscription/switch" className="text-white hover:underline">
-      Switch Subscription
-    </Link>
+                 
                 </>
-              ) : (
-                <Link to="/subscription" className="text-white hover:underline">
-                  Subscription
-                </Link>
               )}
+              <Link to="/subscription" className="text-white hover:underline">
+                Subscription
+              </Link>
               <button
                 onClick={handleLogout}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-500 transition-all duration-200"

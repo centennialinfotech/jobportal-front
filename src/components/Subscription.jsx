@@ -18,7 +18,7 @@ const Subscription = () => {
   const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
   const plans = [
-    { name: 'Free', applicants: 1, price: 0, planId: 'free' },
+    { name: 'Free Trial', applicants: 1, price: 0, planId: 'free' },
     { name: 'Basic', applicants: 100, price: 10, planId: 'basic' },
     { name: 'Standard', applicants: 200, price: 20, planId: 'standard', isPopular: true },
     { name: 'Premium', applicants: 500, price: 50, planId: 'premium' },
@@ -40,7 +40,11 @@ const Subscription = () => {
 
     // Fetch current subscription with retry
     const fetchCurrentSubscription = async (retries = 3, delay = 1000) => {
-      if (!token) return;
+      if (!token) {
+        setError('No authentication token found. Please log in again.');
+        navigate('/login');
+        return;
+      }
       for (let i = 0; i < retries; i++) {
         try {
           const response = await axios.get(
@@ -56,7 +60,10 @@ const Subscription = () => {
             data: err.response?.data,
             attempt: i + 1,
           });
-          if (err.response?.status === 404) return; // No subscription is valid
+          if (err.response?.status === 404) {
+            setCurrentPlan(null); // No subscription exists
+            return;
+          }
           if (i < retries - 1) await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -64,7 +71,7 @@ const Subscription = () => {
     };
 
     fetchCurrentSubscription();
-  }, [paypalClientId, isAdmin, token]);
+  }, [paypalClientId, isAdmin, token, navigate]);
 
   const handleCheckout = async (planId) => {
     if (!token) {
@@ -79,15 +86,18 @@ const Subscription = () => {
     setSelectedPlan(planId);
 
     try {
+      console.log('Initiating checkout for plan:', planId);
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/subscription/checkout`,
         { plan: planId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log('Checkout response:', response.data);
+
       if (planId === 'free') {
-        setSuccess('Free plan activated successfully! You are now an admin.');
-        localStorage.setItem('isAdmin', 'true');
+        setSuccess('Free trial activated successfully!');
+        localStorage.setItem('isAdmin', 'true'); // Free trial allows job posting
         setCurrentPlan('free');
         setTimeout(() => {
           navigate('/profile');
@@ -97,6 +107,7 @@ const Subscription = () => {
         const { qrCode, paymentId, approvalUrl } = response.data;
         setQrCode(qrCode);
         setPaymentId(paymentId);
+        localStorage.setItem('isAdmin', 'true'); // Paid plans allow job posting
         window.open(approvalUrl, '_blank');
       }
     } catch (err) {
@@ -106,9 +117,13 @@ const Subscription = () => {
         data: err.response?.data,
       });
       setError(
-        err.response?.status === 500
+        err.response?.status === 401
+          ? 'Authentication failed. Please log in again.'
+          : err.response?.status === 400
+          ? err.response?.data?.message || 'Invalid plan selected.'
+          : err.response?.status === 500
           ? `Server error: ${err.response?.data?.message || 'Unable to process subscription'}. Please try again later or contact support.`
-          : err.response?.data?.message || 'Failed to initiate subscription'
+          : 'Failed to initiate subscription. Please try again.'
       );
       setSelectedPlan(null);
       setQrCode(null);
@@ -122,7 +137,7 @@ const Subscription = () => {
     setError(null);
   };
 
-  // Common rendering for both admin and non-admin views
+  // Common rendering for subscription view
   const renderSubscriptionContent = (title) => (
     <PayPalScriptProvider options={{ 'client-id': paypalClientId }}>
       <div className="min-h-screen bg-gradient-to-b from-secondary to-white py-12 px-4">
@@ -147,6 +162,11 @@ const Subscription = () => {
               <p className="text-success text-sm">{success}</p>
             </div>
           )}
+          {!currentPlan && (
+            <div className="bg-info/10 border-l-4 border-info p-4 rounded-lg mb-8 max-w-2xl mx-auto">
+              <p className="text-info text-sm">No active plan. Choose a plan to get started!</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {plans.map((plan) => (
               <div
@@ -154,7 +174,7 @@ const Subscription = () => {
                 className={`relative bg-white rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:shadow-xl ${
                   selectedPlan === plan.planId && qrCode && paymentId
                     ? 'min-h-[480px] bg-accent/10 border-2 border-accent'
-                    : currentPlan === plan.planId
+                    : currentPlan === plan.planId && currentPlan
                     ? 'min-h-[350px] border-4 border-success bg-success/20'
                     : 'min-h-[350px] border border-gray-200'
                 } ${plan.isPopular && !(selectedPlan === plan.planId && qrCode && paymentId) && currentPlan !== plan.planId ? 'border-2 border-accent' : ''}`}
@@ -164,7 +184,7 @@ const Subscription = () => {
                     Most Popular
                   </span>
                 )}
-                {currentPlan === plan.planId && (
+                {currentPlan === plan.planId && currentPlan && (
                   <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-success text-white text-sm font-bold px-4 py-1 rounded-full">
                     Current Plan
                   </span>
@@ -215,7 +235,7 @@ const Subscription = () => {
                   ) : currentPlan === plan.planId ? (
                     'Current Plan'
                   ) : (
-                    plan.planId === 'free' ? 'Switch to Free Plan' : 'Pay Now'
+                    plan.planId === 'free' ? 'Start Free Trial' : 'Pay Now'
                   )}
                 </button>
                 {selectedPlan === plan.planId && qrCode && paymentId && (
@@ -235,7 +255,7 @@ const Subscription = () => {
               </div>
             ))}
           </div>
-          {isAdmin && (
+          {currentPlan && (
             <button
               onClick={() => navigate('/admin/job-posts')}
               className="mt-6 py-3 px-6 rounded-lg bg-accent text-white font-semibold hover:bg-accent/90 transition-colors duration-300 mx-auto block"
@@ -248,7 +268,7 @@ const Subscription = () => {
     </PayPalScriptProvider>
   );
 
-  // Non-admin view for /subscription or admin view for /admin/subscription/switch
+  // Handle missing PayPal client ID
   if (!paypalClientId && !isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-secondary to-white flex items-center justify-center px-4">
@@ -266,11 +286,7 @@ const Subscription = () => {
     );
   }
 
-  return renderSubscriptionContent(
-    isAdmin && location.pathname === '/admin/subscription/switch'
-      ? 'Switch Your Subscription Plan'
-      : 'Choose Your Subscription Plan'
-  );
+  return renderSubscriptionContent('Choose Your Subscription Plan');
 };
 
 export default Subscription;

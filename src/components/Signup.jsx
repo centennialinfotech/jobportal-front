@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import FormField from './FormField';
+import { ClipLoader } from 'react-spinners';
 
 function Signup({ setSignupEmail }) {
   const [name, setName] = useState('');
@@ -74,8 +75,14 @@ await api.post('/api/signup', { name, email, password });
         error={errors.password}
       />
       <button onClick={handleSignup} className="btn-primary" disabled={isLoading}>
-        {isLoading ? 'Signing up...' : 'Signup'}
-      </button>
+{isLoading ? (
+          <div className="flex items-center justify-center">
+            <ClipLoader size={20} color="#fff" />
+            <span className="ml-2">Signing up...</span>
+          </div>
+        ) : (
+          'Signup'
+        )}      </button>
       <p className="mt-4 text-center text-text">
         Already have an account?{' '}
         <Link to="/login" className="text-accent font-semibold hover:underline">

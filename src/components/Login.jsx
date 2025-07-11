@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
 import FormField from './FormField';
+import { ClipLoader } from 'react-spinners';
 
 function Login({ setToken }) {
   const [email, setEmail] = useState('');
@@ -62,8 +63,15 @@ function Login({ setToken }) {
         error={errors.password}
       />
       <button onClick={handleLogin} className="btn-primary" disabled={isLoading}>
-        {isLoading ? 'Logging in...' : 'Login'}
-      </button>
+{isLoading ? (
+          <div className="flex items-center justify-center">
+            <ClipLoader size={20} color="#fff" />
+            <span className="ml-2">Logging in...</span>
+          </div>
+        ) : (
+          'Login'
+        )}
+              </button>
       <p className="mt-4 text-center text-text">
         Don't have an account?{' '}
         <Link to="/signup" className="text-accent font-semibold hover:underline">

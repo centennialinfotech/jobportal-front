@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 
-function Login({ setToken }) {
+function AdminLogin({ setToken }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const validate = () => {
     const newErrors = {};
@@ -23,26 +22,19 @@ function Login({ setToken }) {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setApiError('');
       return;
     }
     setIsLoading(true);
     try {
-      console.log('User login request:', { email });
-      const res = await api.post('/api/login', { email: email.trim(), password: password.trim() });
-      setToken(res.data.token, res.data.userId, res.data.isAdmin, res.data.loginType || 'user');
+      console.log('Admin login request:', { email });
+      const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
+      setToken(res.data.token, res.data.userId, res.data.isAdmin, res.data.loginType);
       setErrors({});
       setApiError('');
-      console.log('User login successful, redirecting to:', res.data.isAdmin ? '/admin/profile' : '/profile');
-      navigate(res.data.isAdmin ? '/admin/profile' : '/profile');
     } catch (err) {
       const errorMsg = err.response?.data.message || 'Login failed';
-      console.error('User login error:', err.response?.status, errorMsg);
-      setApiError(
-        errorMsg === 'Admin accounts must use the admin login endpoint'
-          ? 'This is an admin account. Please use the admin login page.'
-          : errorMsg
-      );
+      console.error('Admin login error:', err.response?.status, errorMsg);
+      setApiError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -50,20 +42,8 @@ function Login({ setToken }) {
 
   return (
     <div className="form-container">
-      <h2 className="text-2xl font-bold text-primary mb-6 text-center">User Login</h2>
-      {apiError && (
-        <p className="error-message mb-4 text-center">
-          {apiError}
-          {apiError === 'This is an admin account. Please use the admin login page.' && (
-            <span>
-              {' '}
-              <Link to="/admin/login" className="text-accent font-semibold hover:underline">
-                Go to Admin Login
-              </Link>
-            </span>
-          )}
-        </p>
-      )}
+      <h2 className="text-2xl font-bold text-primary mb-6 text-center">Admin Login</h2>
+      {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
       <div>
         <label className="block text-sm font-medium text-gray-700">Email</label>
         <input
@@ -98,8 +78,8 @@ function Login({ setToken }) {
       </button>
       <p className="mt-4 text-center text-text">
         Don't have an account?{' '}
-        <Link to="/signup" className="text-accent font-semibold hover:underline">
-          User Signup
+        <Link to="/admin/signup" className="text-accent font-semibold hover:underline">
+          Admin Signup
         </Link>
       </p>
       {apiError === 'Email not verified' && (
@@ -113,4 +93,4 @@ function Login({ setToken }) {
   );
 }
 
-export default Login;
+export default AdminLogin;

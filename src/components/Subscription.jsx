@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { ClipLoader } from 'react-spinners';
 
-const Subscription = () => {
+const Subscription = ({ setHasActiveSubscription }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -11,10 +12,10 @@ const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [paymentId, setPaymentId] = useState(null);
   const [currentPlan, setCurrentPlan] = useState(null);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
   const navigate = useNavigate();
-  const location = useLocation();
   const token = localStorage.getItem('token');
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
   const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
   const plans = [
@@ -26,57 +27,59 @@ const Subscription = () => {
   ];
 
   useEffect(() => {
-    setLoading(false);
-    setError(null);
-    setSuccess(null);
-    setQrCode(null);
-    setSelectedPlan(null);
-    setPaymentId(null);
-
-    if (!paypalClientId && !isAdmin) {
-      setError('PayPal configuration error: Missing client ID. Please contact support.');
-    }
-    console.log('PayPal Client ID:', import.meta.env.VITE_PAYPAL_CLIENT_ID);
-
-    // Fetch current subscription with retry
-    const fetchCurrentSubscription = async (retries = 3, delay = 1000) => {
-      if (!token) {
-        setError('No authentication token found. Please log in again.');
-        navigate('/login');
+    const fetchProfileAndSubscription = async () => {
+      if (!token || !isAdmin) {
+        setError('You must be logged in as an admin to access this page.');
+        navigate('/admin/login');
         return;
       }
-      for (let i = 0; i < retries; i++) {
-        try {
-          const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/subscription/current`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          setCurrentPlan(response.data.plan);
-          return;
-        } catch (err) {
-          console.error('Fetch current subscription error:', {
-            message: err.message,
-            status: err.response?.status,
-            data: err.response?.data,
-            attempt: i + 1,
-          });
-          if (err.response?.status === 404) {
-            setCurrentPlan(null); // No subscription exists
-            return;
-          }
-          if (i < retries - 1) await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-      setError('Failed to fetch current subscription after retries. Please try again later.');
-    };
 
-    fetchCurrentSubscription();
-  }, [paypalClientId, isAdmin, token, navigate]);
+      try {
+        // Fetch profile to check if complete
+        const profileResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const { companyName, companyLogo } = profileResponse.data;
+        setIsProfileComplete(!!companyName && !!companyLogo);
+
+        // Fetch subscription status
+        const subscriptionResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/subscription/current`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCurrentPlan(subscriptionResponse.data.plan);
+        setHasActiveSubscription(subscriptionResponse.data.isActive || subscriptionResponse.data.plan === 'free');
+        localStorage.setItem('currentPlan', subscriptionResponse.data.plan || '');
+        console.log('Subscription fetched:', subscriptionResponse.data);
+      } catch (err) {
+        console.error('Fetch error:', {
+          message: err.message,
+          status: err.response?.status,
+          data: err.response?.data,
+        });
+        if (err.response?.status === 404) {
+          setCurrentPlan(null);
+          setHasActiveSubscription(false);
+          localStorage.setItem('currentPlan', '');
+        } else {
+          setError('Failed to fetch profile or subscription status. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfileAndSubscription();
+  }, [token, isAdmin, navigate, setHasActiveSubscription]);
 
   const handleCheckout = async (planId) => {
     if (!token) {
       setError('You must be logged in to subscribe.');
-      navigate('/login');
+      navigate('/admin/login');
+      return;
+    }
+
+    if (!isProfileComplete) {
+      setError('Please complete your company profile (name and logo) before subscribing.');
+      navigate('/admin/profile');
       return;
     }
 
@@ -86,7 +89,6 @@ const Subscription = () => {
     setSelectedPlan(planId);
 
     try {
-      console.log('Initiating checkout for plan:', planId);
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/subscription/checkout`,
         { plan: planId },
@@ -97,17 +99,21 @@ const Subscription = () => {
 
       if (planId === 'free') {
         setSuccess('Free trial activated successfully!');
-        localStorage.setItem('isAdmin', 'true'); // Free trial allows job posting
         setCurrentPlan('free');
+        setHasActiveSubscription(true);
+        localStorage.setItem('currentPlan', 'free');
+        localStorage.setItem('isAdmin', 'true');
+        setIsAdmin(true);
+
         setTimeout(() => {
-          navigate('/profile');
+          navigate('/admin/job-posts');
           setSuccess(null);
         }, 2000);
       } else {
         const { qrCode, paymentId, approvalUrl } = response.data;
         setQrCode(qrCode);
         setPaymentId(paymentId);
-        localStorage.setItem('isAdmin', 'true'); // Paid plans allow job posting
+        localStorage.setItem('currentPlan', planId);
         window.open(approvalUrl, '_blank');
       }
     } catch (err) {
@@ -121,8 +127,6 @@ const Subscription = () => {
           ? 'Authentication failed. Please log in again.'
           : err.response?.status === 400
           ? err.response?.data?.message || 'Invalid plan selected.'
-          : err.response?.status === 500
-          ? `Server error: ${err.response?.data?.message || 'Unable to process subscription'}. Please try again later or contact support.`
           : 'Failed to initiate subscription. Please try again.'
       );
       setSelectedPlan(null);
@@ -137,12 +141,28 @@ const Subscription = () => {
     setError(null);
   };
 
-  // Common rendering for subscription view
-  const renderSubscriptionContent = (title) => (
+  if (!paypalClientId && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-secondary to-white flex items-center justify-center px-4">
+        <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full text-center">
+          <h1 className="text-3xl font-bold text-error mb-4">Configuration Error</h1>
+          <p className="text-text text-lg mb-6">{error || 'PayPal configuration error: Missing client ID.'}</p>
+          <button
+            onClick={() => navigate('/admin/profile')}
+            className="py-3 px-6 rounded-lg bg-accent text-white font-semibold hover:bg-accent/90 transition-colors duration-300"
+          >
+            Return to Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
     <PayPalScriptProvider options={{ 'client-id': paypalClientId }}>
       <div className="min-h-screen bg-gradient-to-b from-secondary to-white py-12 px-4">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl font-extrabold text-center text-primary mb-2">{title}</h1>
+          <h1 className="text-4xl font-extrabold text-center text-primary mb-2">Choose Your Subscription Plan</h1>
           <p className="text-text text-lg text-center mb-12">
             Choose a plan to manage your job posts and applicants.
           </p>
@@ -162,9 +182,18 @@ const Subscription = () => {
               <p className="text-success text-sm">{success}</p>
             </div>
           )}
-          {!currentPlan && (
-            <div className="bg-info/10 border-l-4 border-info p-4 rounded-lg mb-8 max-w-2xl mx-auto">
-              <p className="text-info text-sm">No active plan. Choose a plan to get started!</p>
+          {!isProfileComplete && (
+            <div className="bg-warning/10 border-l-4 border-warning p-4 rounded-lg mb-8 max-w-2xl mx-auto">
+              <p className="text-warning text-sm">
+                Please complete your company profile (name and logo) in{' '}
+                <button
+                  onClick={() => navigate('/admin/profile')}
+                  className="text-blue-600 hover:underline"
+                >
+                  Admin Profile
+                </button>{' '}
+                before subscribing.
+              </p>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -217,9 +246,9 @@ const Subscription = () => {
                 </ul>
                 <button
                   onClick={() => handleCheckout(plan.planId)}
-                  disabled={loading || (!paypalClientId && plan.planId !== 'free') || !token || currentPlan === plan.planId}
+                  disabled={loading || (!paypalClientId && plan.planId !== 'free') || !token || currentPlan === plan.planId || !isProfileComplete}
                   className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-300 flex items-center justify-center ${
-                    loading || (!paypalClientId && plan.planId !== 'free') || !token || currentPlan === plan.planId
+                    loading || (!paypalClientId && plan.planId !== 'free') || !token || currentPlan === plan.planId || !isProfileComplete
                       ? 'bg-gray-500 cursor-not-allowed opacity-60'
                       : 'bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90'
                   }`}
@@ -267,26 +296,6 @@ const Subscription = () => {
       </div>
     </PayPalScriptProvider>
   );
-
-  // Handle missing PayPal client ID
-  if (!paypalClientId && !isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-secondary to-white flex items-center justify-center px-4">
-        <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full text-center">
-          <h1 className="text-3xl font-bold text-error mb-4">Configuration Error</h1>
-          <p className="text-text text-lg mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/profile')}
-            className="py-3 px-6 rounded-lg bg-accent text-white font-semibold hover:bg-accent/90 transition-colors duration-300"
-          >
-            Return to Profile
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return renderSubscriptionContent('Choose Your Subscription Plan');
 };
 
 export default Subscription;

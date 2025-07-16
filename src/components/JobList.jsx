@@ -14,14 +14,16 @@ function JobList() {
       try {
         const [jobsResponse, applicationsResponse] = await Promise.all([
           api.get('/api/jobs'),
-          api.get('/api/user/applications')
+          api.get('/api/user/applications'),
         ]);
+        console.log('Fetched job posts:', JSON.stringify(jobsResponse.data, null, 2));
         setJobPosts(jobsResponse.data);
-        setAppliedJobs(applicationsResponse.data);
+        setAppliedJobs(applicationsResponse.data.map(app => app.jobPostId));
         setLoading(false);
       } catch (err) {
         setError(err.response?.data.message || 'Failed to fetch job posts.');
         setLoading(false);
+        console.error('Fetch job posts error:', err.message);
       }
     };
     fetchJobPosts();
@@ -36,6 +38,7 @@ function JobList() {
       setAppliedJobs([...appliedJobs, jobPostId]);
     } catch (err) {
       setError(err.response?.data.message || 'Failed to apply.');
+      console.error('Apply error:', err.message);
     }
   };
 
@@ -77,6 +80,24 @@ function JobList() {
                 key={post._id}
                 className="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300"
               >
+                <div className="flex items-center mb-4">
+{post.company?.logo && typeof post.company.logo === 'string' ? (
+  <img
+    src={post.company.logo}
+    alt={`${post.company.name || 'company'} logo`}
+    className="w-12 h-12 object-contain rounded-full mr-3"
+    onError={(e) => {
+      e.target.src = 'https://placehold.co/48x48?text=No+Logo';
+      console.error(`Failed to load logo for ${post.company?.name || 'unknown company'} at ${post.company?.logo || 'no URL'}`);
+    }}
+  />
+) : (
+  <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 flex items-center justify-center">
+    <span className="text-gray-500 text-sm">No Logo</span>
+  </div>
+)}
+                  <span className="text-lg font-medium text-gray-900">{post.company?.name || 'Unknown Company'}</span>
+                </div>
                 <h3 className="text-xl font-semibold text-gray-900">{post.title}</h3>
                 <p className="text-gray-700">
                   <span className="font-medium">Location:</span> {post.location}
@@ -90,7 +111,7 @@ function JobList() {
                 <button
                   onClick={() => handleApply(post._id)}
                   disabled={appliedJobs.includes(post._id)}
-                  className={`w-full py-2 rounded-md transition-colors duration-200 ${
+                  className={`w-full py-2 rounded-md transition-colors duration-200 mt-4 ${
                     appliedJobs.includes(post._id)
                       ? 'bg-green-600 text-white cursor-not-allowed'
                       : 'bg-blue-600 text-white hover:bg-blue-700'

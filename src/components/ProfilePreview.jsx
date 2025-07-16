@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 
-const ProfilePreview = () => {
+const ProfilePreview = ({ isAdmin, loginType }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (isAdmin && loginType === 'admin') {
+      navigate('/admin/profile/preview');
+      return;
+    }
     const fetchProfile = async () => {
       try {
         const response = await api.get('/api/profile');
@@ -21,7 +25,7 @@ const ProfilePreview = () => {
       }
     };
     fetchProfile();
-  }, [navigate]);
+  }, [isAdmin, loginType, navigate]);
 
   if (loading) {
     return (
@@ -44,12 +48,12 @@ const ProfilePreview = () => {
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">Profile Preview</h2>
       <div className="bg-white shadow-md rounded-lg p-6">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">Name</label>
-          <p className="text-gray-900 input-field">{user.name}</p>
-        </div>
-        <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Email</label>
           <p className="text-gray-900 input-field">{user.email}</p>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <p className="text-gray-900 input-field">{user.name}</p>
         </div>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Phone</label>
@@ -86,12 +90,6 @@ const ProfilePreview = () => {
           <label className="block text-sm font-medium text-gray-700">Email Verified</label>
           <p className="text-gray-900 input-field">{user.verified ? 'Yes' : 'No'}</p>
         </div>
-        {user.isAdmin && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">Role</label>
-            <p className="text-gray-900 input-field">Admin</p>
-          </div>
-        )}
         <button
           onClick={() => navigate('/profile')}
           className="btn-primary w-full"

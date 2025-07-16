@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 import { usStates, citiesByState } from '../utils/usData';
 
-function Profile() {
+function Profile({ isAdmin, loginType }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [state, setState] = useState('');
@@ -17,9 +18,13 @@ function Profile() {
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [availableCities, setAvailableCities] = useState([]);
+  const navigate = useNavigate();
 
-  // Fetch profile data on mount
   useEffect(() => {
+    if (isAdmin && loginType === 'admin') {
+      navigate('/admin/profile');
+      return;
+    }
     const fetchProfile = async () => {
       try {
         const response = await api.get('/api/profile');
@@ -38,12 +43,13 @@ function Profile() {
       } catch (err) {
         console.error('Profile fetch error:', err);
         setApiError(err.response?.data.message || 'Failed to load profile data.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchProfile();
-  }, []);
+  }, [isAdmin, loginType, navigate]);
 
-  // Fetch cities when state changes
   useEffect(() => {
     if (state) {
       const stateObj = usStates.find(s => s.name.toLowerCase() === state.toLowerCase());
@@ -58,7 +64,6 @@ function Profile() {
     }
   }, [state]);
 
-  // Client-side validation
   const validate = () => {
     const newErrors = {};
     if (!name) newErrors.name = 'Name is required';
@@ -71,10 +76,9 @@ function Profile() {
     if (!selectedCity) newErrors.city = 'City is required';
     else if (selectedCity.length < 2) newErrors.city = 'City must be at least 2 characters';
     if (houseNoStreet && houseNoStreet.length < 5) newErrors.houseNoStreet = 'House number and street must be at least 5 characters if provided';
-    if (!cv) newErrors.cv = 'CV is required';
-    else if (!['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(cv.type))
+    if (cv && !['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(cv.type))
       newErrors.cv = 'CV must be a PDF, DOC, or DOCX file';
-    else if (cv.size > 2 * 1024 * 1024) newErrors.cv = 'CV must be less than 2MB';
+    else if (cv && cv.size > 2 * 1024 * 1024) newErrors.cv = 'CV must be less than 2MB';
     return newErrors;
   };
 
@@ -91,27 +95,20 @@ function Profile() {
     formData.append('state', state.trim());
     formData.append('city', useCustomCity ? customCity.trim() : city.trim());
     formData.append('houseNoStreet', houseNoStreet.trim() || '');
-    formData.append('cv', cv);
+    if (cv) formData.append('cv', cv);
 
     setIsLoading(true);
     try {
-      await api.post('/api/profile', formData, {
+      await api.put('/api/profile', formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',
         },
       });
       setSuccess('Profile updated successfully!');
-      setName('');
-      setPhone('');
-      setState('');
-      setCity('');
-      setCustomCity('');
-      setUseCustomCity(false);
-      setHouseNoStreet('');
-      setCv(null);
       setErrors({});
       setApiError('');
+      setTimeout(() => navigate('/profile/preview'), 2000);
     } catch (err) {
       console.error('Profile update error:', err.response?.status, err.response?.data);
       if (err.response?.status === 400 && err.response.data.errors) {

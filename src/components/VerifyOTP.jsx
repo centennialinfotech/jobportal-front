@@ -1,28 +1,48 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import api from '../utils/api'; 
-import { useNavigate } from 'react-router-dom'; // ✅ import useNavigate
+import api from '../utils/api';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 
 function VerifyOTP({ email: initialEmail }) {
-  const navigate = useNavigate(); // ✅ create navigation object
-  const [otpData, setOtpData] = useState({ email: initialEmail || '', otp: '' });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [otpData, setOtpData] = useState({ email: initialEmail || location.state?.email || '', otp: '' });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setMessage('');
     try {
-
-const response = await api.post('/api/verify-otp', otpData);
-
+      const response = await api.post('/api/verify-otp', otpData);
       setMessage(response.data.message);
 
-      // ✅ Redirect to login after successful verification
+      // Determine isAdmin status
+      let isAdmin = location.state?.isAdmin || false;
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const profileResponse = await api.get('/api/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          isAdmin = profileResponse.data.isAdmin || false;
+          console.log('Profile fetched after OTP verification:', { isAdmin });
+        } catch (profileErr) {
+          console.error('Error fetching profile:', profileErr);
+          // Fallback to location.state.isAdmin
+          console.log('Falling back to location.state.isAdmin:', isAdmin);
+        }
+      } else {
+        console.warn('No token found, using location.state.isAdmin:', isAdmin);
+      }
+
+      // Redirect based on isAdmin
       setTimeout(() => {
-        navigate('/login');
-      }, 2000); // Delay for user to read the success message
+        const redirectPath = isAdmin ? '/admin/login' : '/login';
+        console.log('Redirecting to:', redirectPath);
+        navigate(redirectPath);
+      }, 2000);
     } catch (err) {
       console.error('OTP verification error:', err);
       setMessage(err.response?.data?.message || 'Error verifying OTP');
@@ -33,13 +53,11 @@ const response = await api.post('/api/verify-otp', otpData);
 
   const handleResendOtp = async () => {
     setLoading(true);
+    setMessage('');
     try {
-
       const response = await api.post('/api/resend-otp', {
-
-  email: otpData.email,
-});
-
+        email: otpData.email,
+      });
       setMessage(response.data.message);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error resending OTP');
@@ -60,7 +78,7 @@ const response = await api.post('/api/verify-otp', otpData);
             onChange={(e) => setOtpData({ ...otpData, email: e.target.value })}
             className="mt-1 p-2 w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
-            disabled={!!initialEmail}
+            disabled={!!initialEmail || !!location.state?.email}
           />
         </div>
         <div>
@@ -78,7 +96,7 @@ const response = await api.post('/api/verify-otp', otpData);
           disabled={loading}
           className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
         >
-          {loading ? 'Verifying...' : 'Verify OTP'}
+          {loading ? <ClipLoader size={20} color="#fff" /> : 'Verify OTP'}
         </button>
       </form>
       <button
@@ -86,7 +104,7 @@ const response = await api.post('/api/verify-otp', otpData);
         disabled={loading}
         className="mt-4 w-full bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600 disabled:bg-gray-300"
       >
-        {loading ? 'Resending...' : 'Resend OTP'}
+        {loading ? <ClipLoader size={20} color="#fff" /> : 'Resend OTP'}
       </button>
       {message && <p className="mt-4 text-center text-green-600">{message}</p>}
     </div>

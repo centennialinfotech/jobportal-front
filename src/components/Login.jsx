@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 
@@ -9,6 +9,8 @@ function Login({ setToken }) {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
   const navigate = useNavigate();
 
   const validate = () => {
@@ -19,30 +21,46 @@ function Login({ setToken }) {
     return newErrors;
   };
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setApiError('');
       return;
     }
+
     setIsLoading(true);
     try {
-      console.log('User login request:', { email });
-      const res = await api.post('/api/login', { email: email.trim(), password: password.trim() });
-      setToken(res.data.token, res.data.userId, res.data.isAdmin, res.data.loginType || 'user');
+      const response = await api.post('/api/login', { email, password });
+      setToken(response.data.token, response.data.userId, response.data.isAdmin, '');
       setErrors({});
       setApiError('');
-      console.log('User login successful, redirecting to:', res.data.isAdmin ? '/admin/profile' : '/profile');
-      navigate(res.data.isAdmin ? '/admin/profile' : '/profile');
+      navigate('/profile');
     } catch (err) {
       const errorMsg = err.response?.data.message || 'Login failed';
-      console.error('User login error:', err.response?.status, errorMsg);
-      setApiError(
-        errorMsg === 'Admin accounts must use the admin login endpoint'
-          ? 'This is an admin account. Please use the admin login page.'
-          : errorMsg
-      );
+      console.error('Login error:', err.response?.status, errorMsg);
+      setApiError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setForgotPasswordError('Please enter a valid email in the login form');
+      setErrors({ ...errors, email: 'Please enter a valid email' });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await api.post('/api/forgot-password', { email });
+      setForgotPasswordMessage('Password reset email sent. Please check your inbox.');
+      setForgotPasswordError('');
+    } catch (err) {
+      const errorMsg = err.response?.data.message || 'Failed to send reset email';
+      console.error('Forgot password error:', err.response?.status, errorMsg);
+      setForgotPasswordError(errorMsg);
+      setForgotPasswordMessage('');
     } finally {
       setIsLoading(false);
     }
@@ -51,19 +69,7 @@ function Login({ setToken }) {
   return (
     <div className="form-container">
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">User Login</h2>
-      {apiError && (
-        <p className="error-message mb-4 text-center">
-          {apiError}
-          {apiError === 'This is an admin account. Please use the admin login page.' && (
-            <span>
-              {' '}
-              <Link to="/admin/login" className="text-accent font-semibold hover:underline">
-                Go to Admin Login
-              </Link>
-            </span>
-          )}
-        </p>
-      )}
+      {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
       <div>
         <label className="block text-sm font-medium text-gray-700">Email</label>
         <input
@@ -86,7 +92,11 @@ function Login({ setToken }) {
         />
         {errors.password && <p className="error-message">{errors.password}</p>}
       </div>
-      <button onClick={handleLogin} className="btn-primary w-full mt-4" disabled={isLoading}>
+      <button
+        onClick={handleSubmit}
+        className="btn-primary w-full mt-4"
+        disabled={isLoading}
+      >
         {isLoading ? (
           <div className="flex items-center justify-center">
             <ClipLoader size={20} color="#fff" />
@@ -96,19 +106,32 @@ function Login({ setToken }) {
           'Login'
         )}
       </button>
-      <p className="mt-4 text-center text-text">
-        Don't have an account?{' '}
-        <Link to="/signup" className="text-accent font-semibold hover:underline">
-          User Signup
-        </Link>
-      </p>
-      {apiError === 'Email not verified' && (
-        <p className="mt-2 text-center text-text">
-          <Link to="/verify-otp" className="text-accent font-semibold hover:underline">
-            Verify OTP
-          </Link>
+      <div className="mt-4 text-center">
+        <p className="text-sm text-gray-600">
+          Forgot your password?{' '}
+          <button
+            onClick={handleForgotPassword}
+            className="text-blue-600 hover:underline"
+            disabled={isLoading}
+          >
+            Reset Password
+          </button>
         </p>
-      )}
+        
+        {forgotPasswordMessage && (
+          <p className="text-green-600 mt-2" style={{ marginTop: '5px' }}>{forgotPasswordMessage}</p>
+        )}
+        {forgotPasswordError && (
+<p className="error-message mt-2" style={{ marginTop: '5px' }}>
+    {forgotPasswordError}
+  </p>        )}
+      </div>
+      <p className="mt-4 text-center text-sm text-gray-600">
+        Don't have an account?{' '}
+        <a href="/signup" className="text-blue-600 hover:underline">
+          Sign Up
+        </a>
+      </p>
     </div>
   );
 }

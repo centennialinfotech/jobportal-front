@@ -145,7 +145,7 @@ function HiringPosts() {
                   >
                     <td className="py-3 px-4 text-left">{post.title}</td>
                     <td className="py-3 px-4 text-left">{post.location}</td>
-                    <td className="py-3 px-4 text-left">{post.postedBy?.name || 'Unknown'}</td>
+                    <td className="py-3 px-4 text-left">{post.postedBy?.name }</td>
                     <td className="py-3 px-4 text-left">
                       <Link
                         to={`/admin/job-posts/${post._id}/applications`}

@@ -19,7 +19,8 @@ import JobApplications from './components/JobApplications.jsx';
 import Subscription from './components/Subscription.jsx';
 import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './components/SubscriptionCancel.jsx';
-
+import AdminResetPassword from './components/AdminResetPassword';
+import ResetPassword from './components/ResetPassword.jsx'; 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [userId, setUserId] = useState(localStorage.getItem('userId') || '');
@@ -27,6 +28,7 @@ function App() {
   const [loginType, setLoginType] = useState(localStorage.getItem('loginType') || '');
   const [signupEmail, setSignupEmail] = useState('');
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState(localStorage.getItem('currentPlan') || null);
   const [logoutRoute, setLogoutRoute] = useState(null);
 
   useEffect(() => {
@@ -37,6 +39,13 @@ function App() {
             headers: { Authorization: `Bearer ${token}` },
           });
           setHasActiveSubscription(response.data.isActive);
+          setCurrentPlan(response.data.plan || null);
+          localStorage.setItem('currentPlan', response.data.plan || '');
+          console.log('Subscription status fetched:', {
+            isActive: response.data.isActive,
+            plan: response.data.plan,
+            isAdmin: response.data.isAdmin,
+          });
         } catch (err) {
           console.error('Fetch subscription status error:', {
             message: err.message,
@@ -44,6 +53,8 @@ function App() {
             data: err.response?.data,
           });
           setHasActiveSubscription(false);
+          setCurrentPlan(null);
+          localStorage.setItem('currentPlan', '');
         }
       }
     };
@@ -66,10 +77,12 @@ function App() {
       setIsAdmin(false);
       setLoginType('');
       setHasActiveSubscription(false);
+      setCurrentPlan(null);
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('loginType');
+      localStorage.removeItem('currentPlan');
       console.log('State and localStorage cleared');
     }, 300);
   };
@@ -80,10 +93,12 @@ function App() {
     setUserId(newUserId);
     setIsAdmin(newIsAdmin);
     setLoginType(newLoginType);
+    setCurrentPlan(null); // Reset currentPlan to trigger re-fetch
     localStorage.setItem('token', newToken);
     localStorage.setItem('userId', newUserId);
     localStorage.setItem('isAdmin', newIsAdmin);
     localStorage.setItem('loginType', newLoginType);
+    localStorage.setItem('currentPlan', '');
   };
 
   return (
@@ -93,6 +108,7 @@ function App() {
         isAdmin={isAdmin}
         loginType={loginType}
         hasActiveSubscription={hasActiveSubscription}
+        currentPlan={currentPlan}
         onLogout={logout}
       />
       <main className="flex-grow flex items-center justify-center py-8">
@@ -117,7 +133,8 @@ function App() {
               )
             }
           />
-          <Route
+<Route path="/reset-password/:token" element={<ResetPassword />} /> 
+          <Route path="/admin/reset-password/:token" element={<AdminResetPassword />} />          <Route
             path="/admin/login"
             element={
               token && logoutRoute !== '/admin/login' ? (
@@ -176,7 +193,7 @@ function App() {
           <Route
             path="/admin/job-posts"
             element={
-              <ProtectedRoute isAuthenticated={!!token && isAdmin && hasActiveSubscription} isAdmin={isAdmin} loginType={loginType} logoutRoute={logoutRoute}>
+              <ProtectedRoute isAuthenticated={!!token && isAdmin && (hasActiveSubscription || currentPlan === 'free')} isAdmin={isAdmin} loginType={loginType} logoutRoute={logoutRoute}>
                 <HiringPosts />
               </ProtectedRoute>
             }
@@ -184,12 +201,11 @@ function App() {
           <Route
             path="/admin/job-posts/:id/applications"
             element={
-              <ProtectedRoute isAuthenticated={!!token && isAdmin && hasActiveSubscription} isAdmin={isAdmin} loginType={loginType} logoutRoute={logoutRoute}>
+              <ProtectedRoute isAuthenticated={!!token && isAdmin && (hasActiveSubscription || currentPlan === 'free')} isAdmin={isAdmin} loginType={loginType} logoutRoute={logoutRoute}>
                 <JobApplications />
               </ProtectedRoute>
             }
           />
-  
           <Route
             path="/jobs"
             element={

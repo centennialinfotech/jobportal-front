@@ -145,8 +145,7 @@ function HiringPosts() {
                   >
                     <td className="py-3 px-4 text-left">{post.title}</td>
                     <td className="py-3 px-4 text-left">{post.location}</td>
-                    <td className="py-3 px-4 text-left">{post.postedBy?.name }</td>
-                    <td className="py-3 px-4 text-left">
+<td className="py-3 px-4 text-left">{post.postedBy?.companyName || 'Unknown'}</td>                    <td className="py-3 px-4 text-left">
                       <Link
                         to={`/admin/job-posts/${post._id}/applications`}
                         className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"

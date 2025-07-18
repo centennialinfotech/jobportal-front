@@ -7,7 +7,7 @@ function HiringPosts() {
   const [jobPosts, setJobPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ title: '', description: '', location: '' });
+  const [formData, setFormData] = useState({ title: '', description: '', location: '', skills: '' });
   const [formErrors, setFormErrors] = useState({});
   const navigate = useNavigate();
 
@@ -16,6 +16,9 @@ function HiringPosts() {
     if (!formData.title || formData.title.length < 3) errors.title = 'Title must be at least 3 characters';
     if (!formData.description || formData.description.length < 10) errors.description = 'Description must be at least 10 characters';
     if (!formData.location || formData.location.length < 2) errors.location = 'Location must be at least 2 characters';
+    if (!formData.skills || formData.skills.trim().split(',').filter(skill => skill.trim()).length === 0) {
+      errors.skills = 'At least one skill is required';
+    }
     return errors;
   };
 
@@ -23,7 +26,7 @@ function HiringPosts() {
     const fetchJobPosts = async () => {
       try {
         const response = await api.get('/api/admin/job-posts');
-        console.log('Job posts response:', response.data);
+        console.log('Job posts response:', JSON.stringify(response.data, null, 2));
         setJobPosts(response.data);
         setLoading(false);
       } catch (err) {
@@ -45,13 +48,15 @@ function HiringPosts() {
     try {
       setLoading(true);
       setError('');
+      const skillsArray = formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill);
       const response = await api.post('/api/admin/job-posts', {
         title: formData.title.trim(),
         description: formData.description.trim(),
         location: formData.location.trim(),
+        skills: JSON.stringify(skillsArray),
       });
       setJobPosts([...jobPosts, response.data.jobPost]);
-      setFormData({ title: '', description: '', location: '' });
+      setFormData({ title: '', description: '', location: '', skills: '' });
       setFormErrors({});
     } catch (err) {
       console.error('Form submission error:', err.response?.data);
@@ -113,6 +118,17 @@ function HiringPosts() {
             />
             {formErrors.location && <p className="text-red-600 text-sm">{formErrors.location}</p>}
           </div>
+          <div className="mb-4">
+            <label className="block text-gray-700">Skills (comma-separated, e.g., JavaScript, Python)</label>
+            <input
+              type="text"
+              value={formData.skills}
+              onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="Enter skills, e.g., JavaScript, Python, React"
+            />
+            {formErrors.skills && <p className="text-red-600 text-sm">{formErrors.skills}</p>}
+          </div>
           <button
             type="submit"
             className="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700"
@@ -133,29 +149,46 @@ function HiringPosts() {
                 <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
                   <th className="py-3 px-4 text-left">Title</th>
                   <th className="py-3 px-4 text-left">Location</th>
+                  <th className="py-3 px-4 text-left">Skills</th>
                   <th className="py-3 px-4 text-left">Posted By</th>
                   <th className="py-3 px-4 text-left">Actions</th>
                 </tr>
               </thead>
-             <tbody className="text-gray-600 text-sm">
-  {jobPosts.map((post) => (
-    <tr key={post._id} className="border-b border-gray-200 hover:bg-gray-50">
-      <td className="py-3 px-4 text-left">{post.title || 'N/A'}</td>
-      <td className="py-3 px-4 text-left">{post.location || 'N/A'}</td>
-      <td className="py-3 px-4 text-left">
-        {post.postedBy ? post.postedBy.companyName || 'Unknown Company' : 'Invalid User'}
-      </td>
-      <td className="py-3 px-4 text-left">
-        <Link
-          to={`/admin/job-posts/${post._id}/applications`}
-          className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
-        >
-          View Applications
-        </Link>
-      </td>
-    </tr>
-  ))}
-</tbody>
+              <tbody className="text-gray-600 text-sm">
+                {jobPosts.map((post) => (
+                  <tr key={post._id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="py-3 px-4 text-left">{post.title || 'N/A'}</td>
+                    <td className="py-3 px-4 text-left">{post.location || 'N/A'}</td>
+                    <td className="py-3 px-4 text-left">
+                      {Array.isArray(post.skills) && post.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {post.skills.map((skill, index) => (
+                            <span
+                              key={index}
+                              className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        'No skills listed'
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-left">
+                      {post.postedBy ? post.postedBy.companyName || 'Unknown Company' : 'Invalid User'}
+                    </td>
+                    <td className="py-3 px-4 text-left">
+                      <Link
+                        to={`/admin/job-posts/${post._id}/applications`}
+                        className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
+                      >
+                        View Applications
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         )}

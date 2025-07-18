@@ -50,13 +50,14 @@ function JobList() {
     setSuccess('');
   };
 
-  // Filter job posts based on search term
+  // Filter job posts based on search term, including skills
   const filteredJobs = jobPosts.filter((post) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       (post.company?.name && post.company.name.toLowerCase().includes(searchLower)) ||
       post.title.toLowerCase().includes(searchLower) ||
-      post.location.toLowerCase().includes(searchLower)
+      post.location.toLowerCase().includes(searchLower) ||
+      (Array.isArray(post.skills) && post.skills.some(skill => skill.toLowerCase().includes(searchLower)))
     );
   });
 
@@ -89,7 +90,7 @@ function JobList() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by company, title, or location..."
+              placeholder="Search by company, title, location, or skill..."
               className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
             />
           </div>
@@ -130,6 +131,20 @@ function JobList() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
                       <p className="text-gray-600 text-sm">{post.company?.name || 'Unknown Company'}</p>
+                      {Array.isArray(post.skills) && post.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {post.skills.map((skill, index) => (
+                            <span
+                              key={index}
+                              className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-600 text-sm">No skills listed</p>
+                      )}
                     </div>
                   </div>
                   <button
@@ -192,6 +207,23 @@ function JobList() {
               <p className="text-gray-700">
                 <span className="font-bold">Location:</span> {selectedJob.location}
               </p>
+              <div className="text-gray-700">
+                <span className="font-bold">Skills:</span>
+                {Array.isArray(selectedJob.skills) && selectedJob.skills.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedJob.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-600"> No skills listed</span>
+                )}
+              </div>
               <p className="text-gray-700">
                 <span className="font-bold">Description:</span> {selectedJob.description}
               </p>

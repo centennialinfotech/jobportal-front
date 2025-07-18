@@ -5,6 +5,8 @@ import { ClipLoader } from 'react-spinners';
 function JobList() {
   const [jobPosts, setJobPosts] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -42,6 +44,22 @@ function JobList() {
     }
   };
 
+  const handleSelectJob = (job) => {
+    setSelectedJob(job);
+    setError('');
+    setSuccess('');
+  };
+
+  // Filter job posts based on search term
+  const filteredJobs = jobPosts.filter((post) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (post.company?.name && post.company.name.toLowerCase().includes(searchLower)) ||
+      post.title.toLowerCase().includes(searchLower) ||
+      post.location.toLowerCase().includes(searchLower)
+    );
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -61,68 +79,144 @@ function JobList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-0 sm:px-4 lg:px-6">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold text-primary text-center mb-8">Available Jobs</h2>
-        {success && (
-          <p className="text-center text-green-600 font-semibold text-lg mb-6 bg-white py-2 px-4 rounded-lg shadow-md">
-            {success}
-          </p>
-        )}
-        {jobPosts.length === 0 ? (
-          <p className="text-center text-gray-500 text-lg font-medium bg-white py-6 px-4 rounded-lg shadow-sm">
-            No job posts available.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobPosts.map((post) => (
-              <div
-                key={post._id}
-                className="bg-white shadow-lg rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-300"
-              >
-                <div className="flex items-center mb-4">
-{post.company?.logo && typeof post.company.logo === 'string' ? (
-  <img
-    src={post.company.logo}
-    alt={`${post.company.name || 'company'} logo`}
-    className="w-12 h-12 object-contain rounded-full mr-3"
-    onError={(e) => {
-      e.target.src = 'https://placehold.co/48x48?text=No+Logo';
-      console.error(`Failed to load logo for ${post.company?.name || 'unknown company'} at ${post.company?.logo || 'no URL'}`);
-    }}
-  />
-) : (
-  <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 flex items-center justify-center">
-    <span className="text-gray-500 text-sm">No Logo</span>
-  </div>
-)}
-                  <span className="text-lg font-medium text-gray-900">{post.company?.name || 'Unknown Company'}</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900">{post.title}</h3>
-                <p className="text-gray-700">
-                  <span className="font-medium">Location:</span> {post.location}
-                </p>
-                <p className="text-gray-700">
-                  <span className="font-medium">Description:</span> {post.description}
-                </p>
-                <p className="text-gray-500 text-sm">
-                  Posted on: {new Date(post.createdAt).toLocaleDateString()}
-                </p>
-                <button
-                  onClick={() => handleApply(post._id)}
-                  disabled={appliedJobs.includes(post._id)}
-                  className={`w-full py-2 rounded-md transition-colors duration-200 mt-4 ${
-                    appliedJobs.includes(post._id)
-                      ? 'bg-green-600 text-white cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {appliedJobs.includes(post._id) ? 'Already Applied' : 'Quick Apply'}
-                </button>
-              </div>
-            ))}
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-6rem)]">
+        {/* Left Column: Job List (Broader) with Search */}
+        <div className="lg:w-1/2 bg-white shadow-lg rounded-xl p-6 border border-gray-200 max-h-[80vh] overflow-y-auto">
+          <h2 className="text-2xl font-bold text-primary mb-4">Available Jobs</h2>
+          <div className="mb-4">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by company, title, or location..."
+              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+            />
           </div>
-        )}
+          {filteredJobs.length === 0 ? (
+            <p className="text-center text-gray-500 text-lg font-medium">
+              No job posts available or matching your search.
+            </p>
+          ) : (
+            <ul className="space-y-4">
+              {filteredJobs.map((post) => (
+                <li
+                  key={post._id}
+                  onClick={() => handleSelectJob(post)}
+                  className={`p-4 rounded-md cursor-pointer transition-colors duration-200 ${
+                    selectedJob?._id === post._id
+                      ? 'bg-blue-100 border-blue-300'
+                      : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                  } border flex items-center justify-between`}
+                >
+                  <div className="flex items-center">
+                    {post.company?.logo && typeof post.company.logo === 'string' ? (
+                      <img
+                        src={post.company.logo}
+                        alt={`${post.company.name || 'company'} logo`}
+                        className="w-10 h-10 object-contain rounded-full mr-3"
+                        onError={(e) => {
+                          e.target.src = 'https://placehold.co/40x40?text=No+Logo';
+                          console.error(
+                            `Failed to load logo for ${post.company?.name || 'unknown company'} at ${post.company?.logo || 'no URL'}`
+                          );
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 flex items-center justify-center">
+                        <span className="text-gray-500 text-xs">No Logo</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{post.title}</h3>
+                      <p className="text-gray-600 text-sm">{post.company?.name || 'Unknown Company'}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApply(post._id);
+                    }}
+                    disabled={appliedJobs.includes(post._id)}
+                    className={`py-1 px-3 rounded-md text-sm transition-colors duration-200 ${
+                      appliedJobs.includes(post._id)
+                        ? 'bg-green-600 text-white cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {appliedJobs.includes(post._id) ? 'Applied' : 'Apply'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Right Column: Job Details */}
+        <div className="lg:w-1/2 bg-white shadow-lg rounded-xl p-6 border border-gray-200 flex-1 min-h-[calc(100vh-6rem)]">
+          {success && (
+            <p className="text-center text-green-600 font-semibold text-lg mb-6 py-2 px-4 rounded-lg bg-green-50">
+              {success}
+            </p>
+          )}
+          {selectedJob ? (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-primary mb-4">Job Details</h2>
+              <div className="flex items-center mb-6">
+                {selectedJob.company?.logo && typeof selectedJob.company.logo === 'string' ? (
+                  <img
+                    src={selectedJob.company.logo}
+                    alt={`${selectedJob.company.name || 'company'} logo`}
+                    className="w-20 h-20 object-contain rounded-full mr-6"
+                    onError={(e) => {
+                      e.target.src = 'https://placehold.co/80x80?text=No+Logo';
+                      console.error(
+                        `Failed to load logo for ${selectedJob.company?.name || 'unknown company'} at ${selectedJob.company?.logo || 'no URL'}`
+                      );
+                    }}
+                  />
+                ) : (
+                  <div className="w-20 h-20 bg-gray-200 rounded-full mr-6 flex items-center justify-center">
+                    <span className="text-gray-500 text-sm">No Logo</span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xl font-semibold text-gray-900">
+                    <span className="font-bold">Title:</span> {selectedJob.title}
+                  </p>
+                  <p className="text-gray-600">
+                    <span className="font-bold">Company:</span> {selectedJob.company?.name || 'Unknown Company'}
+                  </p>
+                </div>
+              </div>
+              <p className="text-gray-700">
+                <span className="font-bold">Location:</span> {selectedJob.location}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-bold">Description:</span> {selectedJob.description}
+              </p>
+              <p className="text-gray-500 text-sm">
+                <span className="font-bold">Posted on:</span>{' '}
+                {new Date(selectedJob.createdAt).toLocaleDateString()}
+              </p>
+              <button
+                onClick={() => handleApply(selectedJob._id)}
+                disabled={appliedJobs.includes(selectedJob._id)}
+                className={`w-full py-2 rounded-md transition-colors duration-200 ${
+                  appliedJobs.includes(selectedJob._id)
+                    ? 'bg-green-600 text-white cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {appliedJobs.includes(selectedJob._id) ? 'Already Applied' : 'Quick Apply'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 text-lg font-medium">
+              Select a job from the list to view details.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

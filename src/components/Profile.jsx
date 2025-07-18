@@ -13,6 +13,8 @@ function Profile({ isAdmin, loginType }) {
   const [customCity, setCustomCity] = useState('');
   const [houseNoStreet, setHouseNoStreet] = useState('');
   const [cv, setCv] = useState(null);
+  const [skills, setSkills] = useState([]);
+  const [newSkill, setNewSkill] = useState('');
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [apiError, setApiError] = useState('');
@@ -28,7 +30,7 @@ function Profile({ isAdmin, loginType }) {
     const fetchProfile = async () => {
       try {
         const response = await api.get('/api/profile');
-        const { name, phone, state, city, houseNoStreet } = response.data;
+        const { name, phone, state, city, houseNoStreet, skills } = response.data;
         setName(name || '');
         setPhone(phone || '');
         setState(state || '');
@@ -40,6 +42,7 @@ function Profile({ isAdmin, loginType }) {
           setUseCustomCity(true);
         }
         setHouseNoStreet(houseNoStreet || '');
+        setSkills(skills || []);
       } catch (err) {
         console.error('Profile fetch error:', err);
         setApiError(err.response?.data.message || 'Failed to load profile data.');
@@ -79,7 +82,19 @@ function Profile({ isAdmin, loginType }) {
     if (cv && !['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(cv.type))
       newErrors.cv = 'CV must be a PDF, DOC, or DOCX file';
     else if (cv && cv.size > 2 * 1024 * 1024) newErrors.cv = 'CV must be less than 2MB';
+    if (skills.some(skill => skill.length < 2)) newErrors.skills = 'All skills must be at least 2 characters';
     return newErrors;
+  };
+
+  const addSkill = () => {
+    if (newSkill.trim() && newSkill.trim().length >= 2 && !skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()]);
+      setNewSkill('');
+    }
+  };
+
+  const removeSkill = (skillToRemove) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
   };
 
   const handleSubmit = async () => {
@@ -96,6 +111,7 @@ function Profile({ isAdmin, loginType }) {
     formData.append('city', useCustomCity ? customCity.trim() : city.trim());
     formData.append('houseNoStreet', houseNoStreet.trim() || '');
     if (cv) formData.append('cv', cv);
+    formData.append('skills', JSON.stringify(skills));
 
     setIsLoading(true);
     try {
@@ -123,130 +139,171 @@ function Profile({ isAdmin, loginType }) {
   };
 
   return (
-    <div className="form-container">
+    <div className="form-container max-w-md mx-auto p-4">
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">Update Profile</h2>
-      {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
-      {success && <p className="success-message mb-4 text-center">{success}</p>}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="input-field"
-        />
-        {errors.name && <p className="error-message">{errors.name}</p>}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-        <input
-          type="tel"
-          placeholder="Phone Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="input-field"
-        />
-        {errors.phone && <p className="error-message">{errors.phone}</p>}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">State</label>
-        <select
-          value={state}
-          onChange={(e) => {
-            setState(e.target.value);
-            setCity('');
-            setCustomCity('');
-            setUseCustomCity(false);
-          }}
-          className="input-field"
-          required
-        >
-          <option value="" disabled>Select a state</option>
-          {usStates.map((state) => (
-            <option key={state.abbreviation} value={state.name}>
-              {state.name}
-            </option>
-          ))}
-        </select>
-        {errors.state && <p className="error-message">{errors.state}</p>}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">City</label>
-        <div className="flex items-center gap-2">
+      {apiError && <p className="error-message mb-4 text-center text-red-600">{apiError}</p>}
+      {success && <p className="success-message mb-4 text-center text-green-600">{success}</p>}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input-field w-full"
+          />
+          {errors.name && <p className="error-message text-red-600">{errors.name}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+          <input
+            type="tel"
+            placeholder="Phone Number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="input-field w-full"
+          />
+          {errors.phone && <p className="error-message text-red-600">{errors.phone}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">State</label>
           <select
-            value={useCustomCity ? 'Other' : city}
+            value={state}
             onChange={(e) => {
-              if (e.target.value === 'Other') {
-                setUseCustomCity(true);
-                setCity('');
-              } else {
-                setUseCustomCity(false);
-                setCity(e.target.value);
-                setCustomCity('');
-              }
+              setState(e.target.value);
+              setCity('');
+              setCustomCity('');
+              setUseCustomCity(false);
             }}
-            className="input-field flex-1"
+            className="input-field w-full"
             required
-            disabled={!state}
           >
-            <option value="" disabled>Select a city</option>
-            {availableCities.map((city) => (
-              <option key={city} value={city}>
-                {city}
+            <option value="" disabled>Select a state</option>
+            {usStates.map((state) => (
+              <option key={state.abbreviation} value={state.name}>
+                {state.name}
               </option>
             ))}
-            <option value="Other">Other</option>
           </select>
-          {useCustomCity && (
+          {errors.state && <p className="error-message text-red-600">{errors.state}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">City</label>
+          <div className="flex items-center gap-2">
+            <select
+              value={useCustomCity ? 'Other' : city}
+              onChange={(e) => {
+                if (e.target.value === 'Other') {
+                  setUseCustomCity(true);
+                  setCity('');
+                } else {
+                  setUseCustomCity(false);
+                  setCity(e.target.value);
+                  setCustomCity('');
+                }
+              }}
+              className="input-field w-full"
+              required
+              disabled={!state}
+            >
+              <option value="" disabled>Select a city</option>
+              {availableCities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+              <option value="Other">Other</option>
+            </select>
+            {useCustomCity && (
+              <input
+                type="text"
+                placeholder="Enter city"
+                value={customCity}
+                onChange={(e) => setCustomCity(e.target.value)}
+                className="input-field w-full mt-2"
+              />
+            )}
+          </div>
+          {errors.city && <p className="error-message text-red-600">{errors.city}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">House Number and Street (optional)</label>
+          <textarea
+            placeholder="House Number and Street (optional)"
+            value={houseNoStreet}
+            onChange={(e) => setHouseNoStreet(e.target.value)}
+            className="textarea-field w-full"
+            rows="3"
+          ></textarea>
+          {errors.houseNoStreet && <p className="error-message text-red-600">{errors.houseNoStreet}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Skills</label>
+          <div className="flex items-center gap-2 mb-2">
             <input
               type="text"
-              placeholder="Enter city"
-              value={customCity}
-              onChange={(e) => setCustomCity(e.target.value)}
-              className="input-field flex-1"
+              placeholder="Add a skill (e.g., JavaScript, Python)"
+              value={newSkill}
+              onChange={(e) => setNewSkill(e.target.value)}
+              className="input-field w-3/4 p-2"
             />
-          )}
+            <button
+              onClick={addSkill}
+              className="btn-primary py-1 px-3 rounded-md"
+              disabled={!newSkill.trim() || newSkill.trim().length < 2}
+            >
+              Add
+            </button>
+          </div>
+          {errors.skills && <p className="error-message text-red-600">{errors.skills}</p>}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {skills.map((skill, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+              >
+                {skill}
+                <button
+                  onClick={() => removeSkill(skill)}
+                  className="ml-2 text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
         </div>
-        {errors.city && <p className="error-message">{errors.city}</p>}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">CV</label>
+          <div className="relative">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => setCv(e.target.files[0])}
+              className="file-field opacity-0 absolute w-full h-full cursor-pointer"
+              id="cv-upload"
+              aria-label="Upload CV file"
+            />
+            <label
+              htmlFor="cv-upload"
+              className="btn-primary w-full flex items-center justify-center py-2"
+              tabIndex="0"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  document.getElementById('cv-upload').click();
+                }
+              }}
+            >
+              {cv ? cv.name : 'Choose CV File'}
+            </label>
+          </div>
+          {errors.cv && <p className="error-message text-red-600">{errors.cv}</p>}
+        </div>
+        <button onClick={handleSubmit} className="btn-primary w-full py-2 mt-4" disabled={isLoading}>
+          {isLoading ? <ClipLoader size={20} color="#fff" /> : 'Submit'}
+        </button>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">House Number and Street (optional)</label>
-        <textarea
-          placeholder="House Number and Street (optional)"
-          value={houseNoStreet}
-          onChange={(e) => setHouseNoStreet(e.target.value)}
-          className="textarea-field"
-          rows="4"
-        ></textarea>
-        {errors.houseNoStreet && <p className="error-message">{errors.houseNoStreet}</p>}
-      </div>
-      <div className="relative">
-        <input
-          type="file"
-          accept=".pdf,.doc,.docx"
-          onChange={(e) => setCv(e.target.files[0])}
-          className="file-field opacity-0 absolute w-full h-full cursor-pointer"
-          id="cv-upload"
-          aria-label="Upload CV file"
-        />
-        <label
-          htmlFor="cv-upload"
-          className="btn-primary flex items-center justify-center cursor-pointer"
-          tabIndex="0"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              document.getElementById('cv-upload').click();
-            }
-          }}
-        >
-          {cv ? cv.name : 'Choose CV File'}
-        </label>
-        {errors.cv && <p className="error-message">{errors.cv}</p>}
-      </div>
-      <button onClick={handleSubmit} className="btn-primary w-full mt-4" disabled={isLoading}>
-        {isLoading ? <ClipLoader size={20} color="#fff" /> : 'Submit'}
-      </button>
     </div>
   );
 }

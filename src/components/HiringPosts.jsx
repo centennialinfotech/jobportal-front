@@ -137,25 +137,25 @@ function HiringPosts() {
                   <th className="py-3 px-4 text-left">Actions</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600 text-sm">
-                {jobPosts.map((post) => (
-                  <tr
-                    key={post._id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="py-3 px-4 text-left">{post.title}</td>
-                    <td className="py-3 px-4 text-left">{post.location}</td>
-<td className="py-3 px-4 text-left">{post.postedBy?.companyName || 'Unknown'}</td>                    <td className="py-3 px-4 text-left">
-                      <Link
-                        to={`/admin/job-posts/${post._id}/applications`}
-                        className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
-                      >
-                        View Applications
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+             <tbody className="text-gray-600 text-sm">
+  {jobPosts.map((post) => (
+    <tr key={post._id} className="border-b border-gray-200 hover:bg-gray-50">
+      <td className="py-3 px-4 text-left">{post.title || 'N/A'}</td>
+      <td className="py-3 px-4 text-left">{post.location || 'N/A'}</td>
+      <td className="py-3 px-4 text-left">
+        {post.postedBy ? post.postedBy.companyName || 'Unknown Company' : 'Invalid User'}
+      </td>
+      <td className="py-3 px-4 text-left">
+        <Link
+          to={`/admin/job-posts/${post._id}/applications`}
+          className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
+        >
+          View Applications
+        </Link>
+      </td>
+    </tr>
+  ))}
+</tbody>
             </table>
           </div>
         )}

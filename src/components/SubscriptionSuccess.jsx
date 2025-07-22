@@ -8,13 +8,9 @@ const SubscriptionSuccess = () => {
   const token = localStorage.getItem('token');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
   useEffect(() => {
-    console.log('SubscriptionSuccess loaded:', { searchParams: Object.fromEntries(searchParams), token: !!token });
-
     if (!token) {
-      console.warn('No token found, redirecting to login');
       setError('You must be logged in to verify a payment.');
       setLoading(false);
       setTimeout(() => navigate('/login'), 3000);
@@ -24,10 +20,7 @@ const SubscriptionSuccess = () => {
     const paymentId = searchParams.get('paymentId');
     const payerId = searchParams.get('PayerID');
 
-    console.log('Parsed query params:', { paymentId, payerId });
-
     if (!paymentId || !payerId) {
-      console.warn('Missing payment details:', { paymentId, payerId });
       setError('Missing payment details. Please try again.');
       setLoading(false);
       setTimeout(() => navigate('/subscription'), 3000);
@@ -35,21 +28,16 @@ const SubscriptionSuccess = () => {
     }
 
     const verifyPayment = async () => {
-      console.log('Calling /api/subscription/verify:', { paymentId, payerId });
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_API_URL}/api/subscription/verify`,
           { paymentId, payerId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('Verify response:', response.data);
         localStorage.setItem('isAdmin', 'true');
-        setSuccess(`Subscription activated: ${response.data.plan}!`);
         setLoading(false);
-        setTimeout(() => {
-          console.log('Redirecting to /profile');
-          navigate('/profile');
-        }, 2000);
+        alert(response.data.message);
+        navigate('/profile');
       } catch (err) {
         console.error('Verify error:', {
           message: err.message,
@@ -58,14 +46,10 @@ const SubscriptionSuccess = () => {
         });
         setError(
           err.response?.status === 500
-            ? `Server error: ${err.response?.data?.message || 'Unable to verify payment'}. Please try again later or contact support.`
+            ? 'Server error: Unable to verify payment. Please try again later or contact support.'
             : `Failed to verify subscription: ${err.response?.data?.message || err.message}`
         );
         setLoading(false);
-        setTimeout(() => {
-          console.log('Redirecting to /subscription due to error');
-          navigate('/subscription');
-        }, 3000);
       }
     };
 
@@ -93,11 +77,10 @@ const SubscriptionSuccess = () => {
             </button>
           </>
         )}
-        {success && (
+        {!loading && !error && (
           <>
             <h1 className="text-2xl font-bold text-success">Subscription Successful</h1>
-            <p className="text-text mt-4">{success}</p>
-            <p className="text-text mt-2">Redirecting to your profile...</p>
+            <p className="text-text mt-4">Redirecting to your profile...</p>
           </>
         )}
       </div>

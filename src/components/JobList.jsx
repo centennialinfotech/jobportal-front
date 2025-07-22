@@ -13,56 +13,62 @@ function JobList() {
   const [answers, setAnswers] = useState([]);
 
   useEffect(() => {
-    const fetchJobPosts = async () => {
-      try {
-        const [jobsResponse, applicationsResponse] = await Promise.all([
-          api.get('/api/jobs'),
-          api.get('/api/user/applications'),
-        ]);
-        console.log('Fetched job posts:', JSON.stringify(jobsResponse.data, null, 2));
-        setJobPosts(jobsResponse.data || []);
-        setAppliedJobs(applicationsResponse.data.map(app => app.jobPostId._id) || []);
-        setLoading(false);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to fetch job posts.');
-        setLoading(false);
-        console.error('Fetch job posts error:', err.message, err.response?.data);
-      }
-    };
-    fetchJobPosts();
-  }, []);
-
-  const handleApply = async (jobPostId) => {
+  const fetchJobPosts = async () => {
     try {
-      setError('');
-      setSuccess('');
-      const job = jobPosts.find(post => post._id === jobPostId);
-      if (!job) {
-        setError('Selected job not found.');
-        return;
-      }
-
-      if (job.screeningQuestions?.length > 0) {
-        const unanswered = job.screeningQuestions.some((_, index) => !answers[index]?.trim());
-        if (unanswered) {
-          setError('Please answer all screening questions before applying.');
-          return;
-        }
-        await api.post(`/api/jobs/apply/${jobPostId}`, { screeningAnswers: answers });
-      } else {
-        await api.post(`/api/jobs/apply/${jobPostId}`);
-      }
-
-      setSuccess('Application submitted successfully!');
-      setAppliedJobs(prev => [...prev, jobPostId]);
-      setAnswers([]);
-      setSelectedJob(null);
+      const [jobsResponse, applicationsResponse] = await Promise.all([
+        api.get('/api/jobs'),
+        api.get('/api/user/applications'),
+      ]);
+      console.log('Fetched job posts:', JSON.stringify(jobsResponse.data, null, 2));
+      console.log('Fetched applications:', JSON.stringify(applicationsResponse.data, null, 2));
+      setJobPosts(jobsResponse.data || []);
+      // Filter out applications with invalid jobPostId
+      setAppliedJobs(
+        applicationsResponse.data
+          .filter(app => app.jobPostId && app.jobPostId._id) // Ensure jobPostId exists and has _id
+          .map(app => app.jobPostId._id) || []
+      );
+      setLoading(false);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to apply. Please try again.';
-      setError(errorMessage);
-      console.error('Apply error:', err.response?.data || err.message);
+      setError(err.response?.data?.message || 'Failed to fetch job posts.');
+      setLoading(false);
+      console.error('Fetch job posts error:', err.message, err.response?.data);
     }
   };
+  fetchJobPosts();
+}, []);
+
+const handleApply = async (jobPostId) => {
+  try {
+    setError('');
+    setSuccess('');
+    const job = jobPosts.find(post => post._id === jobPostId);
+    if (!job) {
+      setError('Selected job not found.');
+      return;
+    }
+
+    if (job.screeningQuestions?.length > 0) {
+      const unanswered = job.screeningQuestions.some((_, index) => !answers[index]?.trim());
+      if (unanswered) {
+        setError('Please answer all screening questions before applying.');
+        return;
+      }
+      await api.post(`/api/jobs/apply/${jobPostId}`, { screeningAnswers: answers });
+    } else {
+      await api.post(`/api/jobs/apply/${jobPostId}`);
+    }
+
+    setSuccess('Application submitted successfully!');
+    setAppliedJobs(prev => [...prev, jobPostId]);
+    setAnswers([]);
+    setSelectedJob(null);
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || 'Failed to apply. Please try again.';
+    setError(errorMessage);
+    console.error('Apply error:', err.response?.data || err.message);
+  }
+};
 
   const handleSelectJob = (job) => {
     console.log('Selected job screeningQuestions:', job.screeningQuestions);

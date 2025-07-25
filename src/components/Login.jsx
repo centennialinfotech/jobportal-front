@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 
@@ -34,6 +34,8 @@ function Login({ setToken }) {
       setToken(response.data.token, response.data.userId, response.data.isAdmin, '');
       setErrors({});
       setApiError('');
+      setForgotPasswordMessage('');
+      setForgotPasswordError('');
       navigate('/profile');
     } catch (err) {
       const errorMsg = err.response?.data.message || 'Login failed';
@@ -56,6 +58,8 @@ function Login({ setToken }) {
       await api.post('/api/forgot-password', { email });
       setForgotPasswordMessage('Password reset email sent. Please check your inbox.');
       setForgotPasswordError('');
+      setErrors({});
+      setApiError('');
     } catch (err) {
       const errorMsg = err.response?.data.message || 'Failed to send reset email';
       console.error('Forgot password error:', err.response?.status, errorMsg);
@@ -67,71 +71,78 @@ function Login({ setToken }) {
   };
 
   return (
-    <div className="form-container">
-      <h2 className="text-2xl font-bold text-primary mb-6 text-center">User Login</h2>
-      {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="input-field"
-        />
-        {errors.email && <p className="error-message">{errors.email}</p>}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input-field"
-        />
-        {errors.password && <p className="error-message">{errors.password}</p>}
-      </div>
-      <button
-        onClick={handleSubmit}
-        className="btn-primary w-full mt-4"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center">
-            <ClipLoader size={20} color="#fff" />
-            <span className="ml-2">Logging in...</span>
+    <div className="max-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="w-full min-w-[30vw] sm:max-w-md lg:max-w-[1000px] bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-8">
+        <div className="max-w-md lg:max-w-lg mx-auto">
+          <div className="flex flex-col items-center mb-6">
+            <div className="w-full flex justify-center mb-3">
+              <img
+                src="\src\logo.webp"
+                alt="Centennial Infotech Logo"
+                className="h-14 sm:h-16 lg:h-20 w-auto max-w-[80%] object-contain"
+              />
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Centennial Infotech</h1>
           </div>
-        ) : (
-          'Login'
-        )}
-      </button>
-      <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600">
-          Forgot your password?{' '}
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 mb-6 text-center">User Login</h2>
+          {apiError && <p className="text-red-500 text-sm text-center mb-4">{apiError}</p>}
+          {forgotPasswordMessage && <p className="text-green-500 text-sm text-center mb-4">{forgotPasswordMessage}</p>}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          </div>
+          <div className="text-right mb-4">
+            <button
+              onClick={handleForgotPassword}
+              className="text-blue-600 text-sm font-semibold hover:underline"
+              disabled={isLoading}
+            >
+              Forgot Password?
+            </button>
+          </div>
+          {forgotPasswordError && (
+            <p className="text-red-500 text-sm mb-4">{forgotPasswordError}</p>
+          )}
           <button
-            onClick={handleForgotPassword}
-            className="text-blue-600 hover:underline"
+            onClick={handleSubmit}
+            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
             disabled={isLoading}
           >
-            Reset Password
+            {isLoading ? (
+              <div className="flex items-center">
+                <ClipLoader size={18} color="#fff" />
+                <span className="ml-2">Logging in...</span>
+              </div>
+            ) : (
+              'Login'
+            )}
           </button>
-        </p>
-        
-        {forgotPasswordMessage && (
-          <p className="text-green-600 mt-2" style={{ marginTop: '5px' }}>{forgotPasswordMessage}</p>
-        )}
-        {forgotPasswordError && (
-<p className="error-message mt-2" style={{ marginTop: '5px' }}>
-    {forgotPasswordError}
-  </p>        )}
+          <p className="text-center mt-4 text-sm text-gray-600">
+            Don’t have an account?{' '}
+            <Link to="/signup" className="text-blue-600 font-semibold hover:underline">
+              Sign Up
+            </Link>
+          </p>
+        </div>
       </div>
-      <p className="mt-4 text-center text-sm text-gray-600">
-        Don't have an account?{' '}
-        <a href="/signup" className="text-blue-600 hover:underline">
-          Sign Up
-        </a>
-      </p>
     </div>
   );
 }

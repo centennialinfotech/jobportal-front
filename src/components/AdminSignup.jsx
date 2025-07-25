@@ -36,12 +36,12 @@ function AdminSignup({ setSignupEmail }) {
     try {
       const response = await api.post('/api/admin/signup', { name, email, password });
       console.log('Admin signup response:', response.data);
-      localStorage.setItem('token', response.data.token); // Store token
+      localStorage.setItem('token', response.data.token);
       setSuccess('Account created! Redirecting to verify your email...');
       setErrors({});
       setApiError('');
       setSignupEmail(email);
-      navigate('/verify-otp', { state: { email, isAdmin: true } }); // Pass isAdmin
+      navigate('/verify-otp', { state: { email, isAdmin: true } });
     } catch (err) {
       console.error('Admin signup error:', err);
       setApiError(err.response?.data?.message || 'Signup failed. Please try again.');
@@ -51,59 +51,77 @@ function AdminSignup({ setSignupEmail }) {
   };
 
   return (
-    <div className="form-container">
-      <h2 className="text-2xl font-bold text-primary mb-6 text-center">Admin Signup</h2>
-      {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
-      {success && <p className="success-message mb-4 text-center">{success}</p>}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="input-field"
-        />
-        {errors.name && <p className="error-message">{errors.name}</p>}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="input-field"
-        />
-        {errors.email && <p className="error-message">{errors.email}</p>}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input-field"
-        />
-        {errors.password && <p className="error-message">{errors.password}</p>}
-      </div>
-      <button onClick={handleSignup} className="btn-primary w-full mt-4" disabled={isLoading}>
-        {isLoading ? (
-          <div className="flex items-center justify-center">
-            <ClipLoader size={20} color="#fff" />
-            <span className="ml-2">Signing up...</span>
+    <div className="max-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="w-full min-w-[30vw] sm:max-w-md lg:max-w-[1000px] bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-8">
+        <div className="max-w-md lg:max-w-lg mx-auto">
+          <div className="flex flex-col items-center mb-6">
+            <div className="w-full flex justify-center mb-3">
+              <img
+                src="\src\logo.webp"
+                alt="Centennial Infotech Logo"
+                className="h-14 sm:h-16 lg:h-20 w-auto max-w-[80%] object-contain"
+              />
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Centennial Infotech</h1>
           </div>
-        ) : (
-          'Signup'
-        )}
-      </button>
-      <p className="mt-2 text-center text-text">
-        Already have an account?{' '}
-        <Link to="/admin/login" className="text-accent font-semibold hover:underline">
-          Admin Login
-        </Link>
-      </p>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 mb-6 text-center">Admin Signup</h2>
+          {apiError && <p className="text-red-500 text-sm text-center mb-4">{apiError}</p>}
+          {success && <p className="text-green-500 text-sm text-center mb-4">{success}</p>}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          </div>
+          <button
+            onClick={handleSignup}
+            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <ClipLoader size={18} color="#fff" />
+                <span className="ml-2">Signing up...</span>
+              </div>
+            ) : (
+              'Signup'
+            )}
+          </button>
+          <p className="text-center mt-4 text-sm text-gray-600">
+            Already have an account?{' '}
+            <Link to="/admin/login" className="text-blue-600 font-semibold hover:underline">
+              Admin Login
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

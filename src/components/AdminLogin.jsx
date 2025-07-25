@@ -19,33 +19,34 @@ function AdminLogin({ setToken }) {
     if (!password) newErrors.password = 'Password is required';
     return newErrors;
   };
-const handleLogin = async (retries = 2) => {
-  const validationErrors = validate();
-  if (Object.keys(validationErrors).length > 0) {
-    setErrors(validationErrors);
-    return;
-  }
-  setIsLoading(true);
-  try {
-    console.log('Admin login request:', { email, attempt: 3 - retries });
-    const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
-    setToken(res.data.token, res.data.userId, res.data.isAdmin, res.data.loginType); // Fixed res.custom.data to res.data
-    setErrors({});
-    setApiError('');
-    setForgotPasswordMessage('');
-    setForgotPasswordError('');
-  } catch (err) {
-    if (retries > 0 && !err.response) {
-      console.warn('Retrying login due to network error:', { retriesLeft: retries - 1 });
-      return setTimeout(() => handleLogin(retries - 1), 1000);
+
+  const handleLogin = async (retries = 2) => {
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
     }
-    const errorMsg = err.response?.data?.message || err.message || 'Failed to log in due to server error';
-    console.error('Admin login error:', { status: err.response?.status, message: errorMsg });
-    setApiError(errorMsg);
-  } finally {
-    setIsLoading(false);
-  }
-};
+    setIsLoading(true);
+    try {
+      console.log('Admin login request:', { email, attempt: 3 - retries });
+      const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
+      setToken(res.data.token, res.data.userId, res.data.isAdmin, res.data.loginType);
+      setErrors({});
+      setApiError('');
+      setForgotPasswordMessage('');
+      setForgotPasswordError('');
+    } catch (err) {
+      if (retries > 0 && !err.response) {
+        console.warn('Retrying login due to network error:', { retriesLeft: retries - 1 });
+        return setTimeout(() => handleLogin(retries - 1), 1000);
+      }
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to log in due to server error';
+      console.error('Admin login error:', { status: err.response?.status, message: errorMsg });
+      setApiError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleForgotPassword = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
@@ -71,69 +72,85 @@ const handleLogin = async (retries = 2) => {
   };
 
   return (
-    <div className="form-container">
-      <h2 className="text-2xl font-bold text-primary mb-6 text-center">Admin Login</h2>
-      {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
-      {forgotPasswordMessage && <p className="text-green-600 mb-4 text-center">{forgotPasswordMessage}</p>}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="input-field"
-        />
-        {errors.email && <p className="error-message">{errors.email}</p>}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input-field"
-        />
-        {errors.password && <p className="error-message">{errors.password}</p>}
-      </div>
-      <div className="text-right mt-2">
-        <button
-          onClick={handleForgotPassword}
-          className="text-accent font-semibold hover:underline text-sm"
-          disabled={isLoading}
-        >
-          Forgot Password?
-        </button>
-      </div>
-      {forgotPasswordError && (
-        <p className="error-message mt-2" style={{ marginTop: '5px' }}>
-          {forgotPasswordError}
-        </p>
-      )}
-      <button onClick={handleLogin} className="btn-primary w-full mt-4" disabled={isLoading}>
-        {isLoading ? (
-          <div className="flex items-center justify-center">
-            <ClipLoader size={20} color="#fff" />
-            <span className="ml-2">Logging in...</span>
+    <div className="max-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <div className="w-full min-w-[30vw] sm:max-w-md lg:max-w-[1000px] bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-8">
+        <div className="max-w-md lg:max-w-lg mx-auto">
+          <div className="flex flex-col items-center mb-6">
+            <div className="w-full flex justify-center mb-3">
+              <img
+                src="\src\logo.webp"
+                alt="Centennial Infotech Logo"
+                className="h-14 sm:h-16 lg:h-20 w-auto max-w-[80%] object-contain"
+              />
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Centennial Infotech</h1>
           </div>
-        ) : (
-          'Login'
-        )}
-      </button>
-      <p className="mt-4 text-center text-text">
-        Don't have an account?{' '}
-        <Link to="/admin/signup" className="text-accent font-semibold hover:underline">
-          Admin Signup
-        </Link>
-      </p>
-      {apiError === 'Email not verified' && (
-        <p className="mt-2 text-center text-text">
-          <Link to="/verify-otp" className="text-accent font-semibold hover:underline">
-            Verify OTP
-          </Link>
-        </p>
-      )}
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 mb-6 text-center">Admin Login</h2>
+          {apiError && <p className="text-red-500 text-sm text-center mb-4">{apiError}</p>}
+          {forgotPasswordMessage && <p className="text-green-500 text-sm text-center mb-4">{forgotPasswordMessage}</p>}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          </div>
+          <div className="text-right mb-4">
+            <button
+              onClick={handleForgotPassword}
+              className="text-blue-600 text-sm font-semibold hover:underline"
+              disabled={isLoading}
+            >
+              Forgot Password?
+            </button>
+          </div>
+          {forgotPasswordError && (
+            <p className="text-red-500 text-sm mb-4">{forgotPasswordError}</p>
+          )}
+          <button
+            onClick={handleLogin}
+            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center">
+                <ClipLoader size={18} color="#fff" />
+                <span className="ml-2">Logging in...</span>
+              </div>
+            ) : (
+              'Login'
+            )}
+          </button>
+          <p className="text-center mt-4 text-sm text-gray-600">
+            Don’t have an account?{' '}
+            <Link to="/admin/signup" className="text-blue-600 font-semibold hover:underline">
+              Admin Signup
+            </Link>
+          </p>
+          {apiError === 'Email not verified' && (
+            <p className="text-center mt-2 text-sm text-gray-600">
+              <Link to="/verify-otp" className="text-blue-600 font-semibold hover:underline">
+                Verify OTP
+              </Link>
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

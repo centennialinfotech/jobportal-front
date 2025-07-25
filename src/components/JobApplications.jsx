@@ -87,7 +87,7 @@ function JobApplications() {
             </h2>
             <button
               onClick={() => navigate('/admin/job-posts')}
-              className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-lg font-medium text-lg"
+              className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-4 py-2 mx-3 my-3 rounded-lg font-medium text-lg"
             >
               Back to Job Posts
             </button>

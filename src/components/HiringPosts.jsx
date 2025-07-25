@@ -13,7 +13,7 @@ function HiringPosts() {
     location: '',
     skills: '',
     workType: '',
-    screeningQuestions: [], // Now a string array
+    screeningQuestions: [],
   });
   const [formErrors, setFormErrors] = useState({});
   const [editingPost, setEditingPost] = useState(null);
@@ -74,10 +74,10 @@ function HiringPosts() {
         location: formData.location.trim(),
         skills: JSON.stringify(skillsArray),
         workType: formData.workType,
-        screeningQuestions: JSON.stringify(formData.screeningQuestions), // String array
+        screeningQuestions: JSON.stringify(formData.screeningQuestions),
       };
 
-      console.log('Submitting job post payload:', payload); // Debug log
+      console.log('Submitting job post payload:', payload);
 
       if (editingPost) {
         const response = await api.put(`/api/admin/job-posts/${editingPost._id}`, payload);
@@ -86,7 +86,7 @@ function HiringPosts() {
         ));
         setEditingPost(null);
       } else {
-        const response = await api.post('/api/admin/job-posts', payload); // Line ~87
+        const response = await api.post('/api/admin/job-posts', payload);
         setJobPosts([...jobPosts, response.data.jobPost]);
       }
 
@@ -101,7 +101,7 @@ function HiringPosts() {
       setFormErrors({});
       setCustomQuestion('');
     } catch (err) {
-      console.error('Form submission error:', err.response?.data); // Line ~102
+      console.error('Form submission error:', err.response?.data);
       setError(err.response?.data?.message || `Failed to ${editingPost ? 'update' : 'create'} job post.`);
       if (err.response?.data?.errors) {
         setFormErrors(err.response.data.errors);
@@ -119,7 +119,7 @@ function HiringPosts() {
       location: post.location || '',
       skills: Array.isArray(post.skills) ? post.skills.join(', ') : '',
       workType: post.workType || '',
-      screeningQuestions: Array.isArray(post.screeningQuestions) ? post.screeningQuestions : [], // Expect string array
+      screeningQuestions: Array.isArray(post.screeningQuestions) ? post.screeningQuestions : [],
     });
   };
 
@@ -164,8 +164,8 @@ function HiringPosts() {
 
   if (error && !jobPosts.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-center text-red-600 font-semibold text-lg p-4 bg-white rounded-lg shadow-md">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <p className="text-center text-red-600 font-semibold text-base sm:text-lg p-4 bg-white rounded-lg shadow-md max-w-md mx-auto">
           {error}
         </p>
       </div>
@@ -173,69 +173,69 @@ function HiringPosts() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold text-primary text-center mb-8">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-2xl sm:text-3xl font-bold text-primary text-center mb-6 sm:mb-8">
           {editingPost ? 'Edit Job Post' : 'Manage Job Posts'}
         </h2>
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-md mb-8">
+        <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-md mb-6 sm:mb-8">
           <div className="mb-4">
-            <label className="block text-gray-700">Job Title</label>
+            <label className="block text-gray-700 text-sm sm:text-base font-medium mb-1">Job Title</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 sm:p-3 border rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500"
             />
-            {formErrors.title && <p className="text-red-600 text-sm">{formErrors.title}</p>}
+            {formErrors.title && <p className="text-red-600 text-xs sm:text-sm mt-1">{formErrors.title}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Description</label>
+            <label className="block text-gray-700 text-sm sm:text-base font-medium mb-1">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 sm:p-3 border rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500 h-32 sm:h-40"
             />
-            {formErrors.description && <p className="text-red-600 text-sm">{formErrors.description}</p>}
+            {formErrors.description && <p className="text-red-600 text-xs sm:text-sm mt-1">{formErrors.description}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Location</label>
+            <label className="block text-gray-700 text-sm sm:text-base font-medium mb-1">Location</label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 sm:p-3 border rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500"
             />
-            {formErrors.location && <p className="text-red-600 text-sm">{formErrors.location}</p>}
+            {formErrors.location && <p className="text-red-600 text-xs sm:text-sm mt-1">{formErrors.location}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Skills (comma-separated)</label>
+            <label className="block text-gray-700 text-sm sm:text-base font-medium mb-1">Skills (comma-separated)</label>
             <input
               type="text"
               value={formData.skills}
               onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 sm:p-3 border rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500"
               placeholder="JavaScript, Python, React"
             />
-            {formErrors.skills && <p className="text-red-600 text-sm">{formErrors.skills}</p>}
+            {formErrors.skills && <p className="text-red-600 text-xs sm:text-sm mt-1">{formErrors.skills}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Work Type</label>
+            <label className="block text-gray-700 text-sm sm:text-base font-medium mb-1">Work Type</label>
             <select
               value={formData.workType}
               onChange={(e) => setFormData({ ...formData, workType: e.target.value })}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 sm:p-3 border rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select Work Type</option>
               <option value="Remote">Remote</option>
               <option value="Hybrid">Hybrid</option>
               <option value="Onsite">Onsite</option>
             </select>
-            {formErrors.workType && <p className="text-red-600 text-sm">{formErrors.workType}</p>}
+            {formErrors.workType && <p className="text-red-600 text-xs sm:text-sm mt-1">{formErrors.workType}</p>}
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Screening Questions</label>
-            <p className="text-sm text-gray-500 mb-2">Select or add questions to filter candidates (max 5). Use these to assess availability or suitability.</p>
+            <label className="block text-gray-700 text-sm sm:text-base font-medium mb-2">Screening Questions</label>
+            <p className="text-xs sm:text-sm text-gray-500 mb-2">Select or add questions to filter candidates (max 5).</p>
             {availableQuestions.map((question, index) => (
               <div key={index} className="flex items-center mb-2">
                 <input
@@ -248,18 +248,18 @@ function HiringPosts() {
                       : formData.screeningQuestions.filter(q => q !== question);
                     setFormData({ ...formData, screeningQuestions: updated });
                   }}
-                  className="mr-2"
+                  className="mr-2 h-4 w-4"
                 />
-                <label htmlFor={`question-${index}`} className="text-gray-700">{question}</label>
+                <label htmlFor={`question-${index}`} className="text-gray-700 text-sm sm:text-base">{question}</label>
               </div>
             ))}
-            <div className="flex mt-4">
+            <div className="flex flex-col sm:flex-row mt-4 gap-2">
               <input
                 type="text"
                 value={customQuestion}
                 onChange={(e) => setCustomQuestion(e.target.value)}
-                placeholder="Add a custom question (e.g., 'What is your notice period?')"
-                className="flex-1 p-2 border rounded-md mr-2"
+                placeholder="Add a custom question"
+                className="flex-1 p-2 sm:p-3 border rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="button"
@@ -274,7 +274,7 @@ function HiringPosts() {
                     setFormErrors({ ...formErrors, screeningQuestions: 'Maximum 5 screening questions allowed' });
                   }
                 }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm sm:text-base"
               >
                 Add
               </button>
@@ -282,17 +282,17 @@ function HiringPosts() {
             {formData.screeningQuestions.length > 0 && (
               <div className="mt-2">
                 <p className="text-sm text-gray-600">Selected Questions:</p>
-                <ul className="list-disc list-inside mt-1">
+                <ul className="list-disc list-inside mt-1 text-sm sm:text-base">
                   {formData.screeningQuestions.map((question, index) => (
-                    <li key={index} className="text-gray-700">
-                      {question}
+                    <li key={index} className="text-gray-700 flex justify-between items-center">
+                      <span>{question}</span>
                       <button
                         type="button"
                         onClick={() => {
                           const updated = formData.screeningQuestions.filter(q => q !== question);
                           setFormData({ ...formData, screeningQuestions: updated });
                         }}
-                        className="text-red-600 hover:text-red-800 ml-2"
+                        className="text-red-600 hover:text-red-800 text-xs sm:text-sm ml-2"
                       >
                         Remove
                       </button>
@@ -301,12 +301,12 @@ function HiringPosts() {
                 </ul>
               </div>
             )}
-            {formErrors.screeningQuestions && <p className="text-red-600 text-sm mt-1">{formErrors.screeningQuestions}</p>}
+            {formErrors.screeningQuestions && <p className="text-red-600 text-xs sm:text-sm mt-1">{formErrors.screeningQuestions}</p>}
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700"
+              className="flex-1 bg-blue-600 text-white p-2 sm:p-3 rounded-md hover:bg-blue-700 text-sm sm:text-base disabled:bg-blue-400"
               disabled={loading}
             >
               {loading ? (editingPost ? 'Updating...' : 'Creating...') : (editingPost ? 'Update Job Post' : 'Create Job Post')}
@@ -315,7 +315,7 @@ function HiringPosts() {
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="flex-1 bg-gray-600 text-white p-2 rounded-md hover:bg-gray-700"
+                className="flex-1 bg-gray-600 text-white p-2 sm:p-3 rounded-md hover:bg-gray-700 text-sm sm:text-base"
               >
                 Cancel
               </button>
@@ -324,35 +324,46 @@ function HiringPosts() {
         </form>
 
         {jobPosts.length === 0 ? (
-          <p className="text-center text-gray-500 text-lg font-medium bg-white py-6 px-4 rounded-lg shadow-sm">
+          <p className="text-center text-gray-500 text-base sm:text-lg font-medium bg-white py-6 px-4 rounded-lg shadow-sm">
             No job posts found. Create one to get started.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white shadow-md rounded-lg border border-gray-200">
               <thead>
-                <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                  <th className="py-3 px-6 text-left">Title</th>
-                  <th className="py-3 px-6 text-left">Location</th>
-                  <th className="py-3 px-6 text-left">Skills</th>
-                  <th className="py-3 px-6 text-left">Work Type</th>
-                  <th className="py-3 px-6 text-left">Screening Questions</th>
-                  <th className="py-3 px-6 text-left">Posted By</th>
-                  <th className="py-3 px-6 text-left">Actions</th>
+                <tr className="bg-gray-100 text-gray-600 uppercase text-xs sm:text-sm leading-normal">
+                  <th className="py-3 px-4 text-left">Title</th>
+                  <th className="py-3 px-4 text-left hidden sm:table-cell">Location</th>
+                  <th className="py-3 px-4 text-left hidden md:table-cell">Skills</th>
+                  <th className="py-3 px-4 text-left hidden lg:table-cell">Work Type</th>
+                  <th className="py-3 px-4 text-left hidden xl:table-cell">Questions</th>
+                  <th className="py-3 px-4 text-left hidden lg:table-cell">Posted By</th>
+                  <th className="py-3 px-4 text-left">Actions</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600 text-sm">
+              <tbody className="text-gray-600 text-xs sm:text-sm">
                 {jobPosts.map((post) => (
                   <tr key={post._id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="py-4 px-6 text-left">{post.title || 'N/A'}</td>
-                    <td className="py-4 px-6 text-left">{post.location || 'N/A'}</td>
-                    <td className="py-4 px-6 text-left">
+                    <td className="py-4 px-4 text-left">
+                      <div className="font-medium">{post.title || 'N/A'}</div>
+                      <div className="sm:hidden text-xs mt-1">
+                        <div>Location: {post.location || 'N/A'}</div>
+                        <div className="md:hidden">Skills: {Array.isArray(post.skills) ? post.skills.join(', ') : 'No skills listed'}</div>
+                        <div className="lg:hidden">Work Type: {post.workType || 'N/A'}</div>
+                        <div className="xl:hidden">
+                          Questions: {Array.isArray(post.screeningQuestions) && post.screeningQuestions.length > 0 ? post.screeningQuestions.join('; ') : 'No questions'}
+                        </div>
+                        <div className="lg:hidden">Posted By: {post.postedBy ? post.postedBy.companyName || 'Unknown Company' : 'Invalid User'}</div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-left hidden sm:table-cell">{post.location || 'N/A'}</td>
+                    <td className="py-4 px-4 text-left hidden md:table-cell">
                       {Array.isArray(post.skills) && post.skills.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
                           {post.skills.map((skill, index) => (
                             <span
                               key={index}
-                              className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                              className="inline-block bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full"
                             >
                               {skill}
                             </span>
@@ -362,10 +373,10 @@ function HiringPosts() {
                         'No skills listed'
                       )}
                     </td>
-                    <td className="py-4 px-6 text-left">{post.workType || 'N/A'}</td>
-                    <td className="py-4 px-6 text-left">
+                    <td className="py-4 px-4 text-left hidden lg:table-cell">{post.workType || 'N/A'}</td>
+                    <td className="py-4 px-4 text-left hidden xl:table-cell">
                       {Array.isArray(post.screeningQuestions) && post.screeningQuestions.length > 0 ? (
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1 text-xs sm:text-sm">
                           {post.screeningQuestions.map((question, index) => (
                             <span key={index} className="text-gray-700">
                               {index + 1}. {question}
@@ -376,28 +387,30 @@ function HiringPosts() {
                         'No questions'
                       )}
                     </td>
-                    <td className="py-4 px-6 text-left">
+                    <td className="py-4 px-4 text-left hidden lg:table-cell">
                       {post.postedBy ? post.postedBy.companyName || 'Unknown Company' : 'Invalid User'}
                     </td>
-                    <td className="py-4 px-6 text-left flex gap-2">
-                      <button
-                        onClick={() => handleEdit(post)}
-                        className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(post._id)}
-                        className="text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-md font-medium"
-                      >
-                        Delete
-                      </button>
-                      <Link
-                        to={`/admin/job-posts/${post._id}/applications`}
-                        className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium"
-                      >
-                        View Applications
-                      </Link>
+                    <td className="py-4 px-4 text-left">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          onClick={() => handleEdit(post)}
+                          className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium text-xs sm:text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(post._id)}
+                          className="text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs sm:text-sm"
+                        >
+                          Delete
+                        </button>
+                        <Link
+                          to={`/admin/job-posts/${post._id}/applications`}
+                          className="text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md font-medium text-xs sm:text-sm"
+                        >
+                          View Applications
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

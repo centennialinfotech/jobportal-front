@@ -139,7 +139,7 @@ function Profile({ isAdmin, loginType }) {
   };
 
   return (
-    <div className="form-container max-w-md mx-auto p-4">
+    <div className="form-container min-w-[30vw] mx-auto p-4">
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">Update Profile</h2>
       {apiError && <p className="error-message mb-4 text-center text-red-600">{apiError}</p>}
       {success && <p className="success-message mb-4 text-center text-green-600">{success}</p>}

@@ -271,7 +271,7 @@ const Subscription = ({ setHasActiveSubscription }) => {
                   <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <p className="text-text text-sm mb-3 font-medium">Scan to pay with PayPal or click below:</p>
                     <img src={qrCode} alt="PayPal QR Code" className="mx-auto w-40 h-40" />
-                
+
                   </div>
                 )}
               </div>

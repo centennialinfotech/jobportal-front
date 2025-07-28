@@ -49,7 +49,7 @@ function Signup({ setSignupEmail }) {
 
   return (
     <div className="max-h-screen bg-gray-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="w-full min-w-[30vw] sm:max-w-md lg:max-w-[1000px] bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-8">
+      <div className="w-full min-w-[30vw] min-h-[70vh] sm:max-w-md lg:max-w-[1000px] bg-white rounded-xl shadow-lg p-6 sm:p-8 lg:p-8">
         <div className="max-w-md lg:max-w-lg mx-auto">
           <div className="flex flex-col items-center mb-6">
             <div className="w-full flex justify-center mb-3">

@@ -44,7 +44,7 @@ const ProfilePreview = ({ isAdmin, loginType }) => {
   if (!user) return null;
 
   return (
-    <div className="form-container max-w-md mx-auto p-4">
+    <div className="form-container min-w-[30vw] max-w-md mx-auto p-4">
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">Profile </h2>
       <div className="bg-white shadow-md rounded-lg p-6 space-y-4">
         <div>

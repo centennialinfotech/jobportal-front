@@ -131,7 +131,9 @@ function App() {
                 <Navigate
                   to={
                     isAdmin && loginType === 'admin'
-                      ? '/admin/job-posts'
+                      ? localStorage.getItem('isNewUser') === 'true'
+                        ? '/admin/profile'
+                        : '/admin/profile/preview'
                       : localStorage.getItem('isNewUser') === 'true'
                       ? '/profile'
                       : '/profile/preview'
@@ -147,7 +149,18 @@ function App() {
             path="/login"
             element={
               token ? (
-                <Navigate to={isAdmin && loginType === 'admin' ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace />
+                <Navigate
+                  to={
+                    isAdmin && loginType === 'admin'
+                      ? localStorage.getItem('isNewUser') === 'true'
+                        ? '/admin/profile'
+                        : '/admin/profile/preview'
+                      : localStorage.getItem('isNewUser') === 'true'
+                      ? '/profile'
+                      : '/profile/preview'
+                  }
+                  replace
+                />
               ) : (
                 <Login setToken={handleSetToken} />
               )
@@ -159,7 +172,18 @@ function App() {
             path="/admin/login"
             element={
               token && logoutRoute !== '/admin/login' ? (
-                <Navigate to={isAdmin ? '/admin/profile' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace />
+                <Navigate
+                  to={
+                    isAdmin && loginType === 'admin'
+                      ? localStorage.getItem('isNewUser') === 'true'
+                        ? '/admin/profile'
+                        : '/admin/profile/preview'
+                      : localStorage.getItem('isNewUser') === 'true'
+                      ? '/profile'
+                      : '/profile/preview'
+                  }
+                  replace
+                />
               ) : (
                 <AdminLogin setToken={handleSetToken} />
               )
@@ -167,17 +191,66 @@ function App() {
           />
           <Route
             path="/signup"
-            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace /> : <Signup setSignupEmail={setSignupEmail} />}
+            element={
+              token ? (
+                <Navigate
+                  to={
+                    isAdmin && loginType === 'admin'
+                      ? localStorage.getItem('isNewUser') === 'true'
+                        ? '/admin/profile'
+                        : '/admin/profile/preview'
+                      : localStorage.getItem('isNewUser') === 'true'
+                      ? '/profile'
+                      : '/profile/preview'
+                  }
+                  replace
+                />
+              ) : (
+                <Signup setSignupEmail={setSignupEmail} />
+              )
+            }
           />
           <Route
             path="/admin/signup"
             element={
-              token ? <Navigate to={isAdmin ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace /> : <AdminSignup setSignupEmail={setSignupEmail} />
+              token ? (
+                <Navigate
+                  to={
+                    isAdmin && loginType === 'admin'
+                      ? localStorage.getItem('isNewUser') === 'true'
+                        ? '/admin/profile'
+                        : '/admin/profile/preview'
+                      : localStorage.getItem('isNewUser') === 'true'
+                      ? '/profile'
+                      : '/profile/preview'
+                  }
+                  replace
+                />
+              ) : (
+                <AdminSignup setSignupEmail={setSignupEmail} />
+              )
             }
           />
           <Route
             path="/verify-otp"
-            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace /> : <VerifyOtp email={signupEmail} />}
+            element={
+              token ? (
+                <Navigate
+                  to={
+                    isAdmin && loginType === 'admin'
+                      ? localStorage.getItem('isNewUser') === 'true'
+                        ? '/admin/profile'
+                        : '/admin/profile/preview'
+                      : localStorage.getItem('isNewUser') === 'true'
+                      ? '/profile'
+                      : '/profile/preview'
+                  }
+                  replace
+                />
+              ) : (
+                <VerifyOtp email={signupEmail} />
+              )
+            }
           />
           <Route
             path="/profile"

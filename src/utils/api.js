@@ -14,15 +14,26 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && error.response.data.redirectTo) {
       console.log('Invalid token detected, redirecting to:', error.response.data.redirectTo);
-      localStorage.removeItem('token'); // Clear invalid token
-      window.location.href = error.response.data.redirectTo; // Redirect to specified login page
+      localStorage.removeItem('token');
+      localStorage.removeItem('loginType');
+      window.location.href = error.response.data.redirectTo;
+    } else if (error.response?.status === 503 || error.response?.status === 500) {
+      console.error('Server error:', error.response.data);
+      return Promise.reject({
+        ...error,
+        message: error.response.data.message === 'Service unavailable: Database not connected'
+          ? 'The server is temporarily unavailable due to database issues. Please try again later.'
+          : error.response.data.message || 'An unexpected server error occurred.',
+      });
     }
     return Promise.reject(error);
   }
 );
+
 export default api;

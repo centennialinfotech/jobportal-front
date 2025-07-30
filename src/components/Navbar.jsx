@@ -71,24 +71,17 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
             {isAuthenticated ? (
               <>
                 <Link
-                  to={isAdmin && loginType === 'admin' ? '/admin/profile' : '/profile'}
-                  className="text-white text-lg hover:underline py-3 md:py-0 md:text-base"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {isAdmin && loginType === 'admin' ? 'Company Profile' : 'Profile'}
-                </Link>
-                <Link
                   to={isAdmin && loginType === 'admin' ? '/admin/profile/preview' : '/profile/preview'}
-                  className="text-white text-lg hover:underline py-3 md:py-0 md:text-base"
+                  className="text-white text-lg hover:underline my-2 py-3 md:py-0 md:text-base"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Profile Preview
+                  Profile
                 </Link>
                 {isAdmin && loginType === 'admin' && (
                   <>
                     <Link
                       to="/subscription"
-                      className="text-white text-lg hover:underline py-3 md:py-0 md:text-base"
+                      className="text-white text-lg hover:underline my-2 py-3 md:py-0 md:text-base"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Subscription
@@ -97,7 +90,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                       <>
                         <Link
                           to="/admin/job-posts"
-                          className="text-white text-lg hover:underline py-3 md:py-0 md:text-base"
+                          className="text-white text-lg hover:underline my-2 py-3 md:py-0 md:text-base"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Manage Posts
@@ -109,7 +102,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                 {!isAdmin && (
                   <Link
                     to="/jobs"
-                    className="text-white text-lg hover:underline py-3 md:py-0 md:text-base"
+                    className="text-white text-lg hover:underline py-3 my-2 md:py-0 md:text-base"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Jobs

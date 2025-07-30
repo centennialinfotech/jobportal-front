@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 
@@ -11,6 +11,7 @@ function AdminLogin({ setToken }) {
   const [isLoading, setIsLoading] = useState(false);
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
   const [forgotPasswordError, setForgotPasswordError] = useState('');
+  const navigate = useNavigate();
 
   const validate = () => {
     const newErrors = {};
@@ -30,11 +31,20 @@ function AdminLogin({ setToken }) {
     try {
       console.log('Admin login request:', { email, attempt: 3 - retries });
       const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
-      setToken(res.data.token, res.data.userId, res.data.isAdmin, res.data.loginType);
+      const { token, userId, isAdmin, profile } = res.data;
+      // Determine if the user is new based on profile data (or an isNewUser flag)
+      const isNewUser = !profile || !profile.isComplete; // Adjust based on your API response
+      setToken(token, userId, isAdmin, 'admin');
+      // Store isNewUser and loginType in localStorage for Navbar to use
+      localStorage.setItem('isNewUser', isNewUser);
+      localStorage.setItem('loginType', 'admin');
       setErrors({});
       setApiError('');
       setForgotPasswordMessage('');
       setForgotPasswordError('');
+      // Redirect based on user status
+      const redirectRoute = isNewUser ? '/admin/profile/edit' : '/admin/profile/preview';
+      navigate(redirectRoute);
     } catch (err) {
       if (retries > 0 && !err.response) {
         console.warn('Retrying login due to network error:', { retriesLeft: retries - 1 });

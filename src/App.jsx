@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from './components/Navbar.jsx';
 import Login from './components/Login.jsx';
@@ -20,7 +20,8 @@ import Subscription from './components/Subscription.jsx';
 import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './components/SubscriptionCancel.jsx';
 import AdminResetPassword from './components/AdminResetPassword';
-import ResetPassword from './components/ResetPassword.jsx'; 
+import ResetPassword from './components/ResetPassword.jsx';
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [userId, setUserId] = useState(localStorage.getItem('userId') || '');
@@ -30,6 +31,16 @@ function App() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [currentPlan, setCurrentPlan] = useState(localStorage.getItem('currentPlan') || null);
   const [logoutRoute, setLogoutRoute] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    console.log('Navigation occurred to:', location.pathname, {
+      isAuthenticated: !!token,
+      isAdmin,
+      loginType,
+      isNewUser: localStorage.getItem('isNewUser'),
+    });
+  }, [location]);
 
   useEffect(() => {
     const fetchSubscriptionStatus = async () => {
@@ -93,7 +104,7 @@ function App() {
     setUserId(newUserId);
     setIsAdmin(newIsAdmin);
     setLoginType(newLoginType);
-    setCurrentPlan(null); // Reset currentPlan to trigger re-fetch
+    setCurrentPlan(null);
     localStorage.setItem('token', newToken);
     localStorage.setItem('userId', newUserId);
     localStorage.setItem('isAdmin', newIsAdmin);
@@ -113,41 +124,42 @@ function App() {
       />
       <main className="flex-grow flex items-center justify-center py-8">
         <Routes>
-       <Route
-  path="/"
-  element={
-    token ? (
-      <Navigate
-        to={
-          isAdmin && loginType === 'admin'
-            ? '/admin/job-posts'
-            : localStorage.getItem('isNewUser') === 'true'
-            ? '/profile'
-            : '/profile/preview'
-        }
-        replace
-      />
-    ) : (
-      <Navigate to={logoutRoute || '/login'} replace />
-    )
-  }
-/>
+          <Route
+            path="/"
+            element={
+              token ? (
+                <Navigate
+                  to={
+                    isAdmin && loginType === 'admin'
+                      ? '/admin/job-posts'
+                      : localStorage.getItem('isNewUser') === 'true'
+                      ? '/profile'
+                      : '/profile/preview'
+                  }
+                  replace
+                />
+              ) : (
+                <Navigate to={logoutRoute || '/login'} replace />
+              )
+            }
+          />
           <Route
             path="/login"
             element={
               token ? (
-                <Navigate to={isAdmin && loginType === 'admin' ? '/admin/job-posts' : '/profile'} />
+                <Navigate to={isAdmin && loginType === 'admin' ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace />
               ) : (
                 <Login setToken={handleSetToken} />
               )
             }
           />
-<Route path="/reset-password/:token" element={<ResetPassword />} /> 
-          <Route path="/admin/reset-password/:token" element={<AdminResetPassword />} />          <Route
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/admin/reset-password/:token" element={<AdminResetPassword />} />
+          <Route
             path="/admin/login"
             element={
               token && logoutRoute !== '/admin/login' ? (
-                <Navigate to={isAdmin ? '/admin/profile' : '/profile'} />
+                <Navigate to={isAdmin ? '/admin/profile' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace />
               ) : (
                 <AdminLogin setToken={handleSetToken} />
               )
@@ -155,17 +167,17 @@ function App() {
           />
           <Route
             path="/signup"
-            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} /> : <Signup setSignupEmail={setSignupEmail} />}
+            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace /> : <Signup setSignupEmail={setSignupEmail} />}
           />
           <Route
             path="/admin/signup"
             element={
-              token ? <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} /> : <AdminSignup setSignupEmail={setSignupEmail} />
+              token ? <Navigate to={isAdmin ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace /> : <AdminSignup setSignupEmail={setSignupEmail} />
             }
           />
           <Route
             path="/verify-otp"
-            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : '/profile'} /> : <VerifyOtp email={signupEmail} />}
+            element={token ? <Navigate to={isAdmin ? '/admin/job-posts' : localStorage.getItem('isNewUser') === 'true' ? '/profile' : '/profile/preview'} replace /> : <VerifyOtp email={signupEmail} />}
           />
           <Route
             path="/profile"

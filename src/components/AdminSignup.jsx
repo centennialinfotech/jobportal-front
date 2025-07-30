@@ -57,7 +57,7 @@ function AdminSignup({ setSignupEmail }) {
           <div className="flex flex-col items-center mb-6">
             <div className="w-full flex justify-center mb-3">
               <img
-                src="\src\logo.webp"
+                src="/logo.webp"
                 alt="Centennial Infotech Logo"
                 className="h-14 sm:h-16 lg:h-20 w-auto max-w-[80%] object-contain"
               />

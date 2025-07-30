@@ -43,7 +43,7 @@ function Login({ setToken }) {
     setForgotPasswordError('');
     const redirectRoute = isAdmin
       ? isNewUser ? '/admin/profile' : '/admin/profile/preview'
-      : isNewUser ? '/profile' : '/profile/preview';
+      : isNewUser ? '/profile/preview' : '/profile/preview';
     console.log('Redirecting to:', redirectRoute);
     navigate(redirectRoute);
   } catch (err) {

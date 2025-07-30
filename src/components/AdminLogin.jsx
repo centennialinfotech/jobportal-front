@@ -22,41 +22,41 @@ function AdminLogin({ setToken }) {
   };
 
   const handleLogin = async (retries = 2) => {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+  const validationErrors = validate();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+  setIsLoading(true);
+  try {
+    console.log('Admin login request:', { email, attempt: 3 - retries });
+    const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
+    console.log('API Response:', res.data);
+    const { token, userId, isAdmin, profile } = res.data;
+    const isNewUser = !profile || !profile.phone; // Check if phone exists
+    console.log('isNewUser:', isNewUser, 'Profile:', profile);
+    setToken(token, userId, isAdmin, 'admin');
+    localStorage.setItem('isNewUser', isNewUser.toString());
+    localStorage.setItem('loginType', 'admin');
+    setErrors({});
+    setApiError('');
+    setForgotPasswordMessage('');
+    setForgotPasswordError('');
+    const redirectRoute = isNewUser ? '/admin/profile' : '/admin/profile/preview';
+    console.log('Redirecting to:', redirectRoute);
+    navigate(redirectRoute);
+  } catch (err) {
+    if (retries > 0 && !err.response) {
+      console.warn('Retrying login due to network error:', { retriesLeft: retries - 1 });
+      return setTimeout(() => handleLogin(retries - 1), 1000);
     }
-    setIsLoading(true);
-    try {
-      console.log('Admin login request:', { email, attempt: 3 - retries });
-      const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
-      const { token, userId, isAdmin, profile } = res.data;
-      // Determine if the user is new based on profile data (or an isNewUser flag)
-      const isNewUser = !profile || !profile.isComplete; // Adjust based on your API response
-      setToken(token, userId, isAdmin, 'admin');
-      // Store isNewUser and loginType in localStorage for Navbar to use
-      localStorage.setItem('isNewUser', isNewUser);
-      localStorage.setItem('loginType', 'admin');
-      setErrors({});
-      setApiError('');
-      setForgotPasswordMessage('');
-      setForgotPasswordError('');
-      // Redirect based on user status
-      const redirectRoute = isNewUser ? '/admin/profile/edit' : '/admin/profile/preview';
-      navigate(redirectRoute);
-    } catch (err) {
-      if (retries > 0 && !err.response) {
-        console.warn('Retrying login due to network error:', { retriesLeft: retries - 1 });
-        return setTimeout(() => handleLogin(retries - 1), 1000);
-      }
-      const errorMsg = err.response?.data?.message || err.message || 'Failed to log in due to server error';
-      console.error('Admin login error:', { status: err.response?.status, message: errorMsg });
-      setApiError(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const errorMsg = err.response?.data?.message || err.message || 'Failed to log in due to server error';
+    console.error('Admin login error:', { status: err.response?.status, message: errorMsg });
+    setApiError(errorMsg);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleForgotPassword = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {

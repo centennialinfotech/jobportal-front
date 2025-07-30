@@ -22,30 +22,38 @@ function Login({ setToken }) {
   };
 
   const handleSubmit = async () => {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await api.post('/api/login', { email, password });
-      setToken(response.data.token, response.data.userId, response.data.isAdmin, '');
-      setErrors({});
-      setApiError('');
-      setForgotPasswordMessage('');
-      setForgotPasswordError('');
-      navigate('/profile');
-    } catch (err) {
-      const errorMsg = err.response?.data.message || 'Login failed';
-      console.error('Login error:', err.response?.status, errorMsg);
-      setApiError(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  const validationErrors = validate();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+  setIsLoading(true);
+  try {
+    const response = await api.post('/api/login', { email, password });
+    console.log('API Response:', response.data);
+    const { token, userId, isAdmin, profile } = response.data;
+    const isNewUser = !profile || !profile.phone; // Check if phone exists
+    console.log('isNewUser:', isNewUser, 'Profile:', profile);
+    setToken(token, userId, isAdmin, '');
+    localStorage.setItem('isNewUser', isNewUser.toString());
+    localStorage.setItem('loginType', isAdmin ? 'admin' : 'user');
+    setErrors({});
+    setApiError('');
+    setForgotPasswordMessage('');
+    setForgotPasswordError('');
+    const redirectRoute = isAdmin
+      ? isNewUser ? '/admin/profile' : '/admin/profile/preview'
+      : isNewUser ? '/profile' : '/profile/preview';
+    console.log('Redirecting to:', redirectRoute);
+    navigate(redirectRoute);
+  } catch (err) {
+    const errorMsg = err.response?.data.message || 'Login failed';
+    console.error('Login error:', err.response?.status, errorMsg);
+    setApiError(errorMsg);
+  } finally {
+    setIsLoading(false);
+  }
+};
   const handleForgotPassword = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setForgotPasswordError('Please enter a valid email in the login form');
@@ -77,7 +85,7 @@ function Login({ setToken }) {
           <div className="flex flex-col items-center mb-6">
             <div className="w-full flex justify-center mb-3">
               <img
-                src="\src\logo.webp"
+                src="/logo.webp"
                 alt="Centennial Infotech Logo"
                 className="h-14 sm:h-16 lg:h-20 w-auto max-w-[80%] object-contain"
               />

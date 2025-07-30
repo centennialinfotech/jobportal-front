@@ -113,16 +113,25 @@ function App() {
       />
       <main className="flex-grow flex items-center justify-center py-8">
         <Routes>
-          <Route
-            path="/"
-            element={
-              token ? (
-                <Navigate to={isAdmin && loginType === 'admin' ? '/admin/job-posts' : '/profile'} />
-              ) : (
-                <Navigate to={logoutRoute || '/login'} />
-              )
-            }
-          />
+       <Route
+  path="/"
+  element={
+    token ? (
+      <Navigate
+        to={
+          isAdmin && loginType === 'admin'
+            ? '/admin/job-posts'
+            : localStorage.getItem('isNewUser') === 'true'
+            ? '/profile'
+            : '/profile/preview'
+        }
+        replace
+      />
+    ) : (
+      <Navigate to={logoutRoute || '/login'} replace />
+    )
+  }
+/>
           <Route
             path="/login"
             element={

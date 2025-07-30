@@ -31,12 +31,26 @@ function Login({ setToken }) {
     setIsLoading(true);
     try {
       const response = await api.post('/api/login', { email, password });
-      setToken(response.data.token, response.data.userId, response.data.isAdmin, '');
+      const { token, userId, isAdmin, profile } = response.data;
+      // Determine if the user is new based on profile data (or an isNewUser flag)
+      const isNewUser = !profile || !profile.isComplete; // Adjust based on your API response
+      setToken(token, userId, isAdmin, '');
+      // Store isNewUser in localStorage for Navbar to use
+      localStorage.setItem('isNewUser', isNewUser);
+      localStorage.setItem('loginType', isAdmin ? 'admin' : 'user');
       setErrors({});
       setApiError('');
       setForgotPasswordMessage('');
       setForgotPasswordError('');
-      navigate('/profile');
+      // Redirect based on user status and admin role
+      const redirectRoute = isAdmin
+        ? isNewUser
+          ? '/admin/profile'
+          : '/admin/profile/preview'
+        : isNewUser
+        ? '/profile'
+        : '/profile/preview';
+      navigate(redirectRoute);
     } catch (err) {
       const errorMsg = err.response?.data.message || 'Login failed';
       console.error('Login error:', err.response?.status, errorMsg);
@@ -77,7 +91,7 @@ function Login({ setToken }) {
           <div className="flex flex-col items-center mb-6">
             <div className="w-full flex justify-center mb-3">
               <img
-                src="/logo.webp"
+                src="\src\logo.webp"
                 alt="Centennial Infotech Logo"
                 className="h-14 sm:h-16 lg:h-20 w-auto max-w-[80%] object-contain"
               />

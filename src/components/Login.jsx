@@ -22,44 +22,38 @@ function Login({ setToken }) {
   };
 
   const handleSubmit = async () => {
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await api.post('/api/login', { email, password });
-      const { token, userId, isAdmin, profile } = response.data;
-      // Determine if the user is new based on profile data (or an isNewUser flag)
-      const isNewUser = !profile || !profile.isComplete; // Adjust based on your API response
-      setToken(token, userId, isAdmin, '');
-      // Store isNewUser in localStorage for Navbar to use
-      localStorage.setItem('isNewUser', isNewUser);
-      localStorage.setItem('loginType', isAdmin ? 'admin' : 'user');
-      setErrors({});
-      setApiError('');
-      setForgotPasswordMessage('');
-      setForgotPasswordError('');
-      // Redirect based on user status and admin role
-      const redirectRoute = isAdmin
-        ? isNewUser
-          ? '/admin/profile'
-          : '/admin/profile/preview'
-        : isNewUser
-        ? '/profile'
-        : '/profile/preview';
-      navigate(redirectRoute);
-    } catch (err) {
-      const errorMsg = err.response?.data.message || 'Login failed';
-      console.error('Login error:', err.response?.status, errorMsg);
-      setApiError(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  const validationErrors = validate();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+  setIsLoading(true);
+  try {
+    const response = await api.post('/api/login', { email, password });
+    console.log('API Response:', response.data);
+    const { token, userId, isAdmin, profile } = response.data;
+    const isNewUser = !profile || !profile.phone; // Check if phone exists
+    console.log('isNewUser:', isNewUser, 'Profile:', profile);
+    setToken(token, userId, isAdmin, '');
+    localStorage.setItem('isNewUser', isNewUser.toString());
+    localStorage.setItem('loginType', isAdmin ? 'admin' : 'user');
+    setErrors({});
+    setApiError('');
+    setForgotPasswordMessage('');
+    setForgotPasswordError('');
+    const redirectRoute = isAdmin
+      ? isNewUser ? '/admin/profile' : '/admin/profile/preview'
+      : isNewUser ? '/profile' : '/profile/preview';
+    console.log('Redirecting to:', redirectRoute);
+    navigate(redirectRoute);
+  } catch (err) {
+    const errorMsg = err.response?.data.message || 'Login failed';
+    console.error('Login error:', err.response?.status, errorMsg);
+    setApiError(errorMsg);
+  } finally {
+    setIsLoading(false);
+  }
+};
   const handleForgotPassword = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setForgotPasswordError('Please enter a valid email in the login form');

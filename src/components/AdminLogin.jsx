@@ -33,7 +33,7 @@ function AdminLogin({ setToken }) {
     const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
     console.log('API Response:', res.data);
     const { token, userId, isAdmin, profile } = res.data;
-    const isNewUser = !profile || !profile.phone;
+    const isNewUser = !profile || !profile.companyPhone;
     console.log('isNewUser:', isNewUser, 'Profile:', profile);
     setToken(token, userId, isAdmin, 'admin');
     localStorage.setItem('isNewUser', isNewUser.toString());

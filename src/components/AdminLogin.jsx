@@ -33,7 +33,7 @@ function AdminLogin({ setToken }) {
     const res = await api.post('/api/admin/login', { email: email.trim(), password: password.trim() });
     console.log('API Response:', res.data);
     const { token, userId, isAdmin, profile } = res.data;
-    const isNewUser = !profile || !profile.phone; // Check if phone exists
+    const isNewUser = !profile || !profile.phone;
     console.log('isNewUser:', isNewUser, 'Profile:', profile);
     setToken(token, userId, isAdmin, 'admin');
     localStorage.setItem('isNewUser', isNewUser.toString());
@@ -44,7 +44,8 @@ function AdminLogin({ setToken }) {
     setForgotPasswordError('');
     const redirectRoute = isNewUser ? '/admin/profile' : '/admin/profile/preview';
     console.log('Redirecting to:', redirectRoute);
-    navigate(redirectRoute);
+    navigate(redirectRoute, { replace: true });
+    console.log('Navigation triggered to:', redirectRoute);
   } catch (err) {
     if (retries > 0 && !err.response) {
       console.warn('Retrying login due to network error:', { retriesLeft: retries - 1 });

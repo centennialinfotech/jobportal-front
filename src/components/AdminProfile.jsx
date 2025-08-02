@@ -184,14 +184,14 @@ const handleSubmit = async () => {
 
   if (loading) {
     return (
-      <div className="form-container text-center">
+      <div className="form-container text-center ">
         <ClipLoader size={30} color="#4A90E2" />
       </div>
     );
   }
 
   return (
-    <div className="form-container">
+    <div className="form-container min-w-[30vw]">
       <h2 className="text-2xl font-bold text-primary mb-6 text-center">Company Profile</h2>
       {apiError && <p className="error-message mb-4 text-center">{apiError}</p>}
       {success && <p className="success-message mb-4 text-center">{success}</p>}

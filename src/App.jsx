@@ -21,6 +21,7 @@ import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './components/SubscriptionCancel.jsx';
 import AdminResetPassword from './components/AdminResetPassword';
 import ResetPassword from './components/ResetPassword.jsx';
+import NotificationBell from './components/NotificationBell';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -210,6 +211,7 @@ function App() {
               )
             }
           />
+          
           <Route
             path="/admin/signup"
             element={

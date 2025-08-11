@@ -27,7 +27,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
         <div
           className={`${
             isMobileMenuOpen ? 'flex' : 'hidden'
-          } sm:flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-4 absolute sm:static top-16 left-0 right-0 bg-white sm:bg-transparent p-4 sm:p-0 shadow-md sm:shadow-none z-40`}
+          } sm:flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 absolute sm:static top-16 left-0 right-0 bg-white sm:bg-transparent p-4 sm:p-0 shadow-md sm:shadow-none z-30`}
         >
           {isAuthenticated ? (
             <>

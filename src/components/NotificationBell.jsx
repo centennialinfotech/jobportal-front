@@ -102,83 +102,89 @@ function NotificationBell({ isAuthenticated, isAdmin, loginType }) {
 
       {/* Notification List */}
       {isOpen && isAuthenticated && (
-        <div className="fixed inset-0 sm:absolute sm:top-16 sm:right-0 sm:w-80 md:w-96 sm:max-h-[60vh] bg-white border border-gray-200 rounded-lg sm:rounded-lg shadow-lg z-50 overflow-y-auto">
-          <div className="p-3 sm:p-4 border-b bg-gray-50 flex justify-between items-center">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
-            <button
-              className="sm:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close notifications"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+        <div className="fixed inset-0 sm:absolute sm:top-16 sm:right-0 sm:w-80 md:w-96 sm:max-h-[60vh] bg-white border border-gray-200 sm:rounded-lg shadow-lg z-50 overflow-y-auto">
+          {/* Overlay for mobile */}
+          <div className="fixed inset-0 bg-black bg-opacity-50 sm:hidden" onClick={() => setIsOpen(false)}></div>
+          <div className="relative z-50">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">Notifications</h3>
+              <button
+                className="sm:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
+                onClick={() => setIsOpen(false)}
+                aria-label="Back to main page"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-          {notifications.length === 0 ? (
-            <div className="p-3 sm:p-4 text-center text-gray-500 text-sm">
-              No notifications
-            </div>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {notifications.map((notification) => (
-                <li
-                  key={notification._id}
-                  className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors ${
-                    notification.isRead ? 'bg-gray-100' : 'bg-white'
-                  }`}
+                <svg
+                  className="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <div className="flex justify-between items-start gap-2 sm:gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm sm:text-base font-medium text-gray-800 truncate">
-                        {notification.message}
-                      </p>
-                      {notification.jobId && (
-                        <div className="mt-1 text-xs sm:text-sm text-gray-500">
-                          <p className="truncate"><strong>Job:</strong> {notification.jobId.title}</p>
-                          <p className="truncate"><strong>Company:</strong> {notification.jobId.companyName}</p>
-                          <p className="truncate"><strong>Location:</strong> {notification.jobId.location}</p>
-                          <p className="truncate"><strong>Type:</strong> {notification.jobId.workType}</p>
-                          <p className="truncate"><strong>Skills:</strong> {notification.jobId.skills.join(', ')}</p>
-                          {notification.jobId._id && (
-                            <Link
-                              to={`/jobs/${notification.jobId._id}`}
-                              className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm mt-1 inline-block"
-                              onClick={() => setIsOpen(false)}
-                            >
-                              View Job
-                            </Link>
-                          )}
-                        </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+            {/* Notification Content */}
+            {notifications.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 text-base">
+                No notifications
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-200 p-4">
+                {notifications.map((notification) => (
+                  <li
+                    key={notification._id}
+                    className={`py-4 hover:bg-gray-50 transition-colors ${
+                      notification.isRead ? 'bg-gray-100' : 'bg-white'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base sm:text-lg font-medium text-gray-800">
+                          {notification.message}
+                        </p>
+                        {notification.jobId && (
+                          <div className="mt-2 text-sm sm:text-base text-gray-500">
+                            <p><strong>Job:</strong> {notification.jobId.title}</p>
+                            <p><strong>Company:</strong> {notification.jobId.companyName}</p>
+                            <p><strong>Location:</strong> {notification.jobId.location}</p>
+                            <p><strong>Type:</strong> {notification.jobId.workType}</p>
+                            <p><strong>Skills:</strong> {notification.jobId.skills.join(', ')}</p>
+                            {notification.jobId._id && (
+                              <Link
+                                to={`/jobs/${notification.jobId._id}`}
+                                className="text-blue-600 hover:text-blue-800 text-sm sm:text-base mt-2 inline-block"
+                                onClick={() => setIsOpen(false)}
+                              >
+                                View Job
+                              </Link>
+                            )}
+                          </div>
+                        )}
+                        <p className="mt-2 text-sm text-gray-400">
+                          {format(new Date(notification.createdAt), 'MMM d, yyyy h:mm a')}
+                        </p>
+                      </div>
+                      {!notification.isRead && (
+                        <button
+                          onClick={() => markAsRead(notification._id)}
+                          className="text-sm sm:text-base text-blue-600 hover:text-blue-800 whitespace-nowrap"
+                        >
+                          Mark as read
+                        </button>
                       )}
-                      <p className="mt-1 text-xs text-gray-400">
-                        {format(new Date(notification.createdAt), 'MMM d, yyyy h:mm a')}
-                      </p>
                     </div>
-                    {!notification.isRead && (
-                      <button
-                        onClick={() => markAsRead(notification._id)}
-                        className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
-                      >
-                        Mark as read
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
     </div>

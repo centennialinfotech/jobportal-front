@@ -21,6 +21,20 @@ import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './components/SubscriptionCancel.jsx';
 import AdminResetPassword from './components/AdminResetPassword';
 import ResetPassword from './components/ResetPassword.jsx';
+import { NotificationBell, NotificationsPage } from './NotificationBell';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'https://jobportal-back-1jtg.onrender.com',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -31,6 +45,8 @@ function App() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [currentPlan, setCurrentPlan] = useState(localStorage.getItem('currentPlan') || null);
   const [logoutRoute, setLogoutRoute] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
 
   useEffect(() => {
@@ -42,11 +58,34 @@ function App() {
     });
   }, [location]);
 
+  // Fetch notifications when authenticated
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchNotifications = async () => {
+      try {
+        const response = await api.get('/api/notifications');
+        setNotifications(response.data);
+        setUnreadCount(response.data.filter(n => !n.isRead).length);
+        console.log('Notifications fetched:', response.data);
+      } catch (error) {
+        console.error('Error fetching notifications:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000); // Poll every 60s
+    return () => clearInterval(interval);
+  }, [token]);
+
   useEffect(() => {
     const fetchSubscriptionStatus = async () => {
       if (isAdmin && loginType === 'admin' && token) {
         try {
-          const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/subscription/current`, {
+          const response = await api.get(`${import.meta.env.VITE_API_URL}/api/subscription/current`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setHasActiveSubscription(response.data.isActive);
@@ -89,6 +128,8 @@ function App() {
       setLoginType('');
       setHasActiveSubscription(false);
       setCurrentPlan(null);
+      setNotifications([]);
+      setUnreadCount(0);
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
       localStorage.removeItem('isAdmin');
@@ -112,6 +153,26 @@ function App() {
     localStorage.setItem('currentPlan', '');
   };
 
+  // Mark notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      await api.put(`/api/notifications/${notificationId}/read`);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n._id === notificationId ? { ...n, isRead: true } : n
+        )
+      );
+      setUnreadCount((prev) => prev - 1);
+      console.log('Notification marked as read:', notificationId);
+    } catch (error) {
+      console.error('Error marking notification as read:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar
@@ -121,6 +182,8 @@ function App() {
         hasActiveSubscription={hasActiveSubscription}
         currentPlan={currentPlan}
         onLogout={logout}
+        notifications={notifications}
+        unreadCount={unreadCount}
       />
       <main className="flex-grow flex items-center justify-center py-8">
         <Routes>
@@ -210,7 +273,6 @@ function App() {
               )
             }
           />
-          
           <Route
             path="/admin/signup"
             element={
@@ -330,6 +392,21 @@ function App() {
             element={
               <ProtectedRoute isAuthenticated={!!token && isAdmin} isAdmin={isAdmin} loginType={loginType} logoutRoute={logoutRoute}>
                 <SubscriptionCancel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute isAuthenticated={!!token} isAdmin={isAdmin} loginType={loginType} logoutRoute={logoutRoute}>
+                <NotificationsPage
+                  isAuthenticated={!!token}
+                  isAdmin={isAdmin}
+                  loginType={loginType}
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  markAsRead={markAsRead}
+                />
               </ProtectedRoute>
             }
           />

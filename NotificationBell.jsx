@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaBell } from 'react-icons/fa';
 import axios from 'axios';
 import { format } from 'date-fns';
+import './NotificationBell.css';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'https://jobportal-back-1jtg.onrender.com',

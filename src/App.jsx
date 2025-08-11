@@ -21,7 +21,7 @@ import SubscriptionSuccess from './components/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './components/SubscriptionCancel.jsx';
 import AdminResetPassword from './components/AdminResetPassword';
 import ResetPassword from './components/ResetPassword.jsx';
-import { NotificationBell, NotificationsPage } from './NotificationBell';
+import { NotificationBell, NotificationsPage } from './components/NotificationBell';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://jobportal-back-1jtg.onrender.com',

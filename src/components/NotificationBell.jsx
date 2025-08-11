@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaBell } from 'react-icons/fa';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -79,14 +78,21 @@ function NotificationBell({ isAuthenticated, isAdmin, loginType }) {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Notification Bell Icon */}
+      {/* Notification Bell Icon (SVG) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 focus:outline-none"
-        aria-label="Notifications"
+        aria-label={`Notifications, ${unreadCount} unread`}
         disabled={!isAuthenticated}
       >
-        <FaBell className="text-xl sm:text-2xl" />
+        <svg
+          className="w-5 h-5 sm:w-6 sm:h-6"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-3.5-6.2l-2.8 3.4h2.8V15h-5v-1.8l2.8-3.4H9.5V8h5v1.8z" />
+        </svg>
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 text-xs font-bold text-white bg-red-500 rounded-full">
             {unreadCount}
@@ -96,7 +102,7 @@ function NotificationBell({ isAuthenticated, isAdmin, loginType }) {
 
       {/* Notification List */}
       {isOpen && isAuthenticated && (
-        <div className="fixed sm:absolute top-12 sm:top-10 right-0 sm:right-0 w-full sm:w-80 md:w-96 max-h-[70vh] sm:max-h-96 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 mx-2 sm:mx-0">
+        <div className="fixed sm:absolute top-16 right-0 max-w-[calc(100%-1rem)] sm:w-80 md:w-96 max-h-[60vh] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 mx-2 sm:mx-0">
           <div className="p-3 sm:p-4 border-b bg-gray-50">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
           </div>
@@ -113,18 +119,18 @@ function NotificationBell({ isAuthenticated, isAdmin, loginType }) {
                     notification.isRead ? 'bg-gray-100' : 'bg-white'
                   }`}
                 >
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1">
-                      <p className="text-sm sm:text-base font-medium text-gray-800">
+                  <div className="flex justify-between items-start gap-2 sm:gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-base font-medium text-gray-800 truncate">
                         {notification.message}
                       </p>
                       {notification.jobId && (
                         <div className="mt-1 text-xs sm:text-sm text-gray-500">
-                          <p><strong>Job:</strong> {notification.jobId.title}</p>
-                          <p><strong>Company:</strong> {notification.jobId.companyName}</p>
-                          <p><strong>Location:</strong> {notification.jobId.location}</p>
-                          <p><strong>Type:</strong> {notification.jobId.workType}</p>
-                          <p><strong>Skills:</strong> {notification.jobId.skills.join(', ')}</p>
+                          <p className="truncate"><strong>Job:</strong> {notification.jobId.title}</p>
+                          <p className="truncate"><strong>Company:</strong> {notification.jobId.companyName}</p>
+                          <p className="truncate"><strong>Location:</strong> {notification.jobId.location}</p>
+                          <p className="truncate"><strong>Type:</strong> {notification.jobId.workType}</p>
+                          <p className="truncate"><strong>Skills:</strong> {notification.jobId.skills.join(', ')}</p>
                           {notification.jobId._id && (
                             <Link
                               to={`/jobs/${notification.jobId._id}`}

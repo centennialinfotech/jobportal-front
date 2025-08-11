@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa';
 import NotificationBell from './NotificationBell';
 
 function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, currentPlan, onLogout }) {

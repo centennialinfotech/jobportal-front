@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../utils/api';
 import { ClipLoader } from 'react-spinners';
 
@@ -11,6 +12,7 @@ function JobList() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [answers, setAnswers] = useState([]);
+  const location = useLocation();
 
   useEffect(() => {
     const fetchJobPosts = async () => {
@@ -21,12 +23,35 @@ function JobList() {
         ]);
         console.log('Fetched job posts:', JSON.stringify(jobsResponse.data, null, 2));
         console.log('Fetched applications:', JSON.stringify(applicationsResponse.data, null, 2));
-        setJobPosts(jobsResponse.data || []);
+        const jobs = jobsResponse.data || [];
+        setJobPosts(jobs);
         setAppliedJobs(
           applicationsResponse.data
             .filter(app => app.jobPostId && app.jobPostId._id)
             .map(app => app.jobPostId._id) || []
         );
+
+        // Read search and jobId query parameters
+        const params = new URLSearchParams(location.search);
+        const searchQuery = params.get('search');
+        const jobId = params.get('jobId');
+
+        if (searchQuery) {
+          console.log('Setting search term from URL:', searchQuery);
+          setSearchTerm(decodeURIComponent(searchQuery));
+        }
+
+        if (jobId) {
+          const matchingJob = jobs.find(post => post._id === jobId);
+          if (matchingJob) {
+            console.log('Pre-selecting job:', { id: matchingJob._id, title: matchingJob.title });
+            setSelectedJob(matchingJob);
+          } else {
+            console.warn('Job not found for jobId:', jobId);
+            setError('The selected job could not be found.');
+          }
+        }
+
         setLoading(false);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to fetch job posts.');
@@ -35,7 +60,7 @@ function JobList() {
       }
     };
     fetchJobPosts();
-  }, []);
+  }, [location.search]);
 
   const handleApply = async (jobPostId) => {
     try {
@@ -257,7 +282,7 @@ function JobList() {
             // Job List
             <>
               <h2 className="text-2xl font-bold text-primary mb-4">Available Jobs</h2>
-              <div className="mb-4">
+              <div className="mb-4 flex items-center">
                 <input
                   type="text"
                   value={searchTerm}
@@ -265,6 +290,14 @@ function JobList() {
                   placeholder="Search by company, title, location, or skill..."
                   className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 text-base"
                 />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="ml-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
               {error && (
                 <p className="text-center text-red-600 font-semibold text-base p-3 bg-red-50 rounded-md mb-4">
@@ -289,6 +322,8 @@ function JobList() {
                       className={`p-6 rounded-md cursor-pointer transition-colors duration-200 min-h-[120px] ${
                         selectedJob?._id === post._id
                           ? 'bg-blue-100 border-blue-300'
+                          : post._id === new URLSearchParams(location.search).get('jobId')
+                          ? 'bg-yellow-100 border-yellow-300'
                           : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
                       } border flex items-center justify-between`}
                     >

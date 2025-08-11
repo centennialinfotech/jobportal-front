@@ -45,7 +45,7 @@ function NotificationBell({ isAuthenticated, isAdmin, loginType }) {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside (desktop only)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -102,9 +102,29 @@ function NotificationBell({ isAuthenticated, isAdmin, loginType }) {
 
       {/* Notification List */}
       {isOpen && isAuthenticated && (
-        <div className="fixed sm:absolute top-16 right-0 max-w-[calc(100%-1rem)] sm:w-80 md:w-96 max-h-[60vh] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 mx-2 sm:mx-0">
-          <div className="p-3 sm:p-4 border-b bg-gray-50">
+        <div className="fixed inset-0 sm:absolute sm:top-16 sm:right-0 sm:w-80 md:w-96 sm:max-h-[60vh] bg-white border border-gray-200 rounded-lg sm:rounded-lg shadow-lg z-50 overflow-y-auto">
+          <div className="p-3 sm:p-4 border-b bg-gray-50 flex justify-between items-center">
             <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
+            <button
+              className="sm:hidden text-gray-600 hover:text-gray-800 focus:outline-none"
+              onClick={() => setIsOpen(false)}
+              aria-label="Close notifications"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
           {notifications.length === 0 ? (
             <div className="p-3 sm:p-4 text-center text-gray-500 text-sm">

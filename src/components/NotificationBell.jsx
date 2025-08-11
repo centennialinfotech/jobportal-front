@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://jobportal-back-1jtg.onrender.com',
@@ -16,9 +16,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-function NotificationPage({ isAuthenticated, isAdmin, loginType }) {
+function NotificationBell({ isAuthenticated, isAdmin, loginType }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const navigate = useNavigate();
 
   // Fetch notifications when authenticated
   useEffect(() => {
@@ -43,6 +44,13 @@ function NotificationPage({ isAuthenticated, isAdmin, loginType }) {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
+  // Navigate to notifications page
+  const handleBellClick = () => {
+    if (isAuthenticated) {
+      navigate('/notifications');
+    }
+  };
+
   // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
@@ -63,6 +71,35 @@ function NotificationPage({ isAuthenticated, isAdmin, loginType }) {
     }
   };
 
+  return (
+    <div className="relative">
+      {/* Notification Bell Icon (SVG) */}
+      <button
+        onClick={handleBellClick}
+        className="relative flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 focus:outline-none"
+        aria-label={`Notifications, ${unreadCount} unread`}
+        disabled={!isAuthenticated}
+      >
+        <svg
+          className="w-5 h-5 sm:w-6 sm:h-6"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-3.5-6.2l-2.8 3.4h2.8V15h-5v-1.8l2.8-3.4H9.5V8h5v1.8z" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+    </div>
+  );
+}
+
+// Separate component for the Notifications page
+function NotificationsPage({ isAuthenticated, notifications, unreadCount, markAsRead }) {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -150,4 +187,5 @@ function NotificationPage({ isAuthenticated, isAdmin, loginType }) {
   );
 }
 
-export default NotificationPage;
+// Export both components
+export { NotificationBell, NotificationsPage };

@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { FaBars, FaTimes } from 'react-icons/fa';
 import NotificationBell from './NotificationBell';
 
 function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, currentPlan, onLogout }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <nav className="bg-white shadow-md p-4">
       <div className="container mx-auto flex justify-between items-center">
@@ -11,8 +14,21 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
           Centennial Infotech
         </Link>
 
+        {/* Mobile Menu Toggle */}
+        <button
+          className="sm:hidden text-gray-600 hover:text-blue-600 focus:outline-none"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+        </button>
+
         {/* Navigation Links */}
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        <div
+          className={`${
+            isMobileMenuOpen ? 'flex' : 'hidden'
+          } sm:flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-4 absolute sm:static top-16 left-0 right-0 bg-white sm:bg-transparent p-4 sm:p-0 shadow-md sm:shadow-none z-40`}
+        >
           {isAuthenticated ? (
             <>
               {isAdmin && loginType === 'admin' ? (
@@ -22,6 +38,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                     className={({ isActive }) =>
                       `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                     }
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Profile
                   </NavLink>
@@ -31,6 +48,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                       className={({ isActive }) =>
                         `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                       }
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Job Posts
                     </NavLink>
@@ -40,6 +58,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                     className={({ isActive }) =>
                       `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                     }
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Subscription
                   </NavLink>
@@ -51,6 +70,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                     className={({ isActive }) =>
                       `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                     }
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Profile
                   </NavLink>
@@ -59,6 +79,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                     className={({ isActive }) =>
                       `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                     }
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Jobs
                   </NavLink>
@@ -70,7 +91,10 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                 loginType={loginType}
               />
               <button
-                onClick={() => onLogout(loginType)}
+                onClick={() => {
+                  onLogout(loginType);
+                  setIsMobileMenuOpen(false);
+                }}
                 className="text-sm sm:text-base text-red-600 hover:text-red-800"
               >
                 Logout
@@ -83,6 +107,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                 className={({ isActive }) =>
                   `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                 }
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Login
               </NavLink>
@@ -91,6 +116,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                 className={({ isActive }) =>
                   `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                 }
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Signup
               </NavLink>
@@ -99,6 +125,7 @@ function Navbar({ isAuthenticated, isAdmin, loginType, hasActiveSubscription, cu
                 className={({ isActive }) =>
                   `text-sm sm:text-base ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}`
                 }
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Admin Login
               </NavLink>

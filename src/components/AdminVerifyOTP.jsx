@@ -3,7 +3,7 @@ import api from '../utils/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 
-function VerifyOTP({ email: initialEmail }) {
+function AdminVerifyOTP({ email: initialEmail, setToken }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [otpData, setOtpData] = useState({ email: initialEmail || location.state?.email || '', otp: '' });
@@ -14,41 +14,30 @@ function VerifyOTP({ email: initialEmail }) {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+    let isMounted = true;
     try {
       const response = await api.post('/api/verify-otp', otpData);
+      console.log('OTP verification response:', response.data);
       setMessage(response.data.message);
 
-      // Determine isAdmin status
-      let isAdmin = location.state?.isAdmin || false;
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const profileResponse = await api.get('/api/profile', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          isAdmin = profileResponse.data.isAdmin || false;
-          console.log('Profile fetched after OTP verification:', { isAdmin });
-        } catch (profileErr) {
-          console.error('Error fetching profile:', profileErr);
-          // Fallback to location.state.isAdmin
-          console.log('Falling back to location.state.isAdmin:', isAdmin);
+      if (response.data.message === 'Email verified successfully') {
+        // Update global state for admin status
+        const isAdmin = location.state?.isAdmin || true;
+        setToken(null, '', isAdmin, 'admin'); // No token, set isAdmin and loginType
+        console.log('Redirecting to: /admin/login');
+        if (isMounted) {
+          navigate('/admin/login', { state: { fromOtp: true } });
         }
-      } else {
-        console.warn('No token found, using location.state.isAdmin:', isAdmin);
       }
-
-      // Redirect based on isAdmin
-      setTimeout(() => {
-        const redirectPath = isAdmin ? '/admin/login' : '/login';
-        console.log('Redirecting to:', redirectPath);
-        navigate(redirectPath);
-      }, 2000);
     } catch (err) {
-      console.error('OTP verification error:', err);
+      console.error('OTP verification error:', err.response?.data || err.message);
       setMessage(err.response?.data?.message || 'Error verifying OTP');
     } finally {
       setLoading(false);
     }
+    return () => {
+      isMounted = false;
+    };
   };
 
   const handleResendOtp = async () => {
@@ -106,9 +95,14 @@ function VerifyOTP({ email: initialEmail }) {
       >
         {loading ? <ClipLoader size={20} color="#fff" /> : 'Resend OTP'}
       </button>
-      {message && <p className="mt-4 text-center text-green-600">{message}</p>}
+      {message && (
+        <p className={`mt-4 text-center ${message.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
+          {message}
+        </p>
+      )}
+   
     </div>
   );
 }
 
-export default VerifyOTP;
+export default AdminVerifyOTP;

@@ -41,7 +41,7 @@ function AdminSignup({ setSignupEmail }) {
       setErrors({});
       setApiError('');
       setSignupEmail(email);
-      navigate('/verify-otp', { state: { email, isAdmin: true } });
+      navigate('/admin/verify-otp', { state: { email, isAdmin: true } });
     } catch (err) {
       console.error('Admin signup error:', err);
       setApiError(err.response?.data?.message || 'Signup failed. Please try again.');

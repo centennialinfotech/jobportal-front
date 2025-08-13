@@ -34,14 +34,17 @@ function Signup({ setSignupEmail }) {
 
     setIsLoading(true);
     try {
-      await api.post('/api/signup', { name, email, password });
+      const response = await api.post('/api/signup', { name, email, password });
+      console.log('User signup response:', response.data);
+      localStorage.setItem('token', response.data.token);
       setSuccess('Account created! Redirecting to verify your email...');
       setErrors({});
       setApiError('');
       setSignupEmail(email);
-      setTimeout(() => navigate('/verify-otp'), 1000);
+      navigate('/verify-otp', { state: { email, isAdmin: false } });
     } catch (err) {
-      setApiError(err.response?.data.message || 'Signup failed');
+      console.error('User signup error:', err);
+      setApiError(err.response?.data?.message || 'Signup failed');
     } finally {
       setIsLoading(false);
     }

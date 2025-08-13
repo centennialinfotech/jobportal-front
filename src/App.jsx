@@ -6,7 +6,8 @@ import Login from './components/Login.jsx';
 import AdminLogin from './components/AdminLogin.jsx';
 import Signup from './components/Signup.jsx';
 import AdminSignup from './components/AdminSignup.jsx';
-import VerifyOtp from './components/VerifyOTP.jsx';
+import UserVerifyOTP from './components/UserVerifyOTP.jsx';
+import AdminVerifyOTP from './components/AdminVerifyOTP.jsx';
 import Profile from './components/Profile.jsx';
 import ProfilePreview from './components/ProfilePreview.jsx';
 import AdminProfile from './components/AdminProfile.jsx';
@@ -58,7 +59,6 @@ function App() {
     });
   }, [location]);
 
-  // Fetch notifications when authenticated
   useEffect(() => {
     if (!token) return;
 
@@ -77,7 +77,7 @@ function App() {
       }
     };
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // Poll every 60s
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [token]);
 
@@ -153,7 +153,6 @@ function App() {
     localStorage.setItem('currentPlan', '');
   };
 
-  // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
       await api.put(`/api/notifications/${notificationId}/read`);
@@ -210,6 +209,27 @@ function App() {
           />
           <Route
             path="/login"
+            element={
+              token ? (
+                <Navigate
+                  to={
+                    isAdmin && loginType === 'admin'
+                      ? localStorage.getItem('isNewUser') === 'true'
+                        ? '/admin/profile'
+                        : '/admin/profile/preview'
+                      : localStorage.getItem('isNewUser') === 'true'
+                      ? '/profile'
+                      : '/profile/preview'
+                  }
+                  replace
+                />
+              ) : (
+                <Login setToken={handleSetToken} />
+              )
+            }
+          />
+          <Route
+            path="/user/login"
             element={
               token ? (
                 <Navigate
@@ -311,10 +331,31 @@ function App() {
                   replace
                 />
               ) : (
-                <VerifyOtp email={signupEmail} />
+                <UserVerifyOTP email={signupEmail} />
               )
             }
           />
+ <Route
+        path="/admin/verify-otp"
+        element={
+          token && !location.state?.fromOtp ? (
+            <Navigate
+              to={
+                isAdmin && loginType === 'admin'
+                  ? localStorage.getItem('isNewUser') === 'true'
+                    ? '/admin/profile'
+                    : '/admin/profile/preview'
+                  : localStorage.getItem('isNewUser') === 'true'
+                  ? '/profile'
+                  : '/profile/preview'
+              }
+              replace
+            />
+          ) : (
+            <AdminVerifyOTP email={signupEmail} setToken={handleSetToken} />
+          )
+        }
+      />
           <Route
             path="/profile"
             element={
